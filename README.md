@@ -73,4 +73,3 @@ David Vázquez, Adriana Romero, Michal Drozdzal, Lluis Gomez
 
 ## TODO
 - [ ] Relaunch: Remember the number of the last epoch
-# keras_zoo_SE
