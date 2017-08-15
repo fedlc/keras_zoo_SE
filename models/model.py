@@ -184,7 +184,14 @@ class One_Net_Model(Model):
 
             elif self.cf.problem_type == 'segmentation':
                 # Compute Jaccard per class
+                
+                ##test_metrics: see above
+                ##model.metrics_names: ['loss', 'U9', 'U8', 'U5', 'U4', 'U7', 'U6', 'U1', 'U0', 'U3', 'U2', 'U10', 'I9', 'I8', 'I1', 'I0', 'I3', 'I2', 'I5', 'I4', 'I7', 'I6', 'I10', 'acc']
+
                 metrics_dict = dict(zip(self.model.metrics_names, test_metrics))
+
+                ## metrics_dict: {'U9': 8084.333333333333, 'U8': 54890.0, 'U5': 244498.66666666666, 'U4': 161890.33333333334, 'U7': 36734.333333333336, 'U6': 8936.0, 'U1': 531287.0, 'U0': 145011.33333333334, 'U3': 1708693.3333333333, 'U2': 5956.0, 'U10': 26039.0, 'I9': 0.0, 'I8': 0.0, 'I1': 0.0, 'I0': 0.0, 'I3': 485366.33333333331, 'I2': 0.0, 'I5': 0.0, 'I4': 0.0, 'I7': 0.0, 'I6': 0.0, 'I10': 0.0, 'acc': 0.28408331672350567, 'loss': 2.3173979123433432}
+
 
                 print(self.model.metrics_names)
 
