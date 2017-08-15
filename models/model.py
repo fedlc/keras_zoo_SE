@@ -166,6 +166,9 @@ class One_Net_Model(Model):
 
             # Evaluate model
             start_time = time.time()
+
+            ## Returns scalar test loss (if the model has no metrics) or list
+            ## of scalars (if the model computes other metrics).
             test_metrics = self.model.evaluate_generator(test_gen,
                                                          self.cf.dataset.n_images_test,
                                                          max_q_size=self.cf.max_q_size,
@@ -182,6 +185,9 @@ class One_Net_Model(Model):
             elif self.cf.problem_type == 'segmentation':
                 # Compute Jaccard per class
                 metrics_dict = dict(zip(self.model.metrics_names, test_metrics))
+
+                print(self.model.metrics_names)
+
                 I = np.zeros(self.cf.dataset.n_classes)
                 U = np.zeros(self.cf.dataset.n_classes)
                 jacc_percl = np.zeros(self.cf.dataset.n_classes)

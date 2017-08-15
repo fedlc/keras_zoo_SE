@@ -68,7 +68,7 @@ earlyStopping_verbose        = 0               # Verbosity of the early stopping
 checkpoint_enabled           = True            # Enable the Callback
 checkpoint_monitor           = 'val_jaccard'   # Metric to monitor
 checkpoint_mode              = 'max'           # Mode ['max' | 'min']
-checkpoint_save_best_only    = True            # Save best or last model
+checkpoint_save_best_only    = True            # Save best or last model ##change to last?
 checkpoint_save_weights_only = True            # Save only weights or also model
 checkpoint_verbose           = 0               # Verbosity of the checkpoint
 
