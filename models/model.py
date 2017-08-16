@@ -124,7 +124,7 @@ class One_Net_Model(Model):
 
             # Create a data generator
             ## it was: data_gen_queue, _stop, _generator_threads = GeneratorEnqueuer(self.test_gen, max_q_size=cf.max_q_size)
-            data_gen_queue, _stop, _generator_threads = GeneratorEnqueuer(test_gen, max_q_size=self.cf.max_q_size)
+            data_gen_queue, _stop, _generator_threads = GeneratorEnqueuer(self.test_gen, pickle_safe=True)
 
             # Process the dataset
             start_time = time.time()
@@ -184,7 +184,7 @@ class One_Net_Model(Model):
 
             elif self.cf.problem_type == 'segmentation':
                 # Compute Jaccard per class
-                
+
                 ##test_metrics: see above
                 ##model.metrics_names: ['loss', 'U9', 'U8', 'U5', 'U4', 'U7', 'U6', 'U1', 'U0', 'U3', 'U2', 'U10', 'I9', 'I8', 'I1', 'I0', 'I3', 'I2', 'I5', 'I4', 'I7', 'I6', 'I10', 'acc']
 
