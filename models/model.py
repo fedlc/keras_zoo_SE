@@ -163,7 +163,7 @@ class One_Net_Model(Model):
 
 
     ##
-    def SE_predict(self, test_gen, tag='pred')
+    def SE_predict(self, test_gen, tag='pred'):
         if self.cf.SE_pred_model:
             print('\n > Snapshot Ensembling, predicting using models from the ensemble0...')
             # Load models
