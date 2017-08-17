@@ -161,6 +161,19 @@ class One_Net_Model(Model):
             s_p_f = total_time / float(self.cf.dataset.n_images_test)
             print ('   Predicting time: {}. FPS: {}. Seconds per Frame: {}'.format(total_time, fps, s_p_f))
 
+
+    ##
+    def SE_predict(self, test_gen, tag='pred')
+        if self.cf.SE_pred_model:
+            print('\n > Snapshot Ensembling, predicting using models from the ensemble0...')
+            # Load models
+            self.model.load_weights(self.cf.weights_file)
+            model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
+            print(model_list)
+
+
+
+
     # Test the model
     def test(self, test_gen):
         if self.cf.test_model:
