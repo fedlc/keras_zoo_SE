@@ -2,6 +2,7 @@
 import argparse
 import os
 import sys
+import time
 from getpass import getuser
 import matplotlib
 matplotlib.use('Agg')  # Faster plot
@@ -52,7 +53,8 @@ def process(configuration):
                 model.train(train_gen, valid_gen, cb)
             else:
                 raise ValueError('Unknown data format')
-	    print ('Train time: ' + str(time.time()-start_train))
+	    print ('	Training time: ' + str(time.time()-start_train))
+
         if cf.test_model:
             # Compute validation metrics
             model.test(valid_gen)

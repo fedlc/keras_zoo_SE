@@ -90,7 +90,7 @@ LRScheduler_S                = 10000            # Step for the 'step' method
 LRScheduler_power            = 0.9              # Power for the 'poly' method
 
 # Callback Snapshot Ensemble
-SE_enabled                   = True            # Enable the callbacks (both learning rate schedule and snapshot model weights saving)
+SE_enabled                   = True            # Enable the callbacks (both: learning rate schedule and snapshot model weights saving)
 SE_n_models                  = 5                # Number of snapshot models
 
 

@@ -7,5 +7,5 @@
 # CUDA_VISIBLE_DEVICES=$1 python train.py --config_path config/camvid_adversarial_semseg.py --exp_name $2 --shared_path /home/user/experiments --local_path /home/user/experiments
 
 
-# CUDA_VISIBLE_DEVICES=$1 python train.py --config_path config/camvid.py --exp_name $2 --shared_path /home/flucchesi/experiments --local_path /home/flucchesi/experiments
-CUDA_VISIBLE_DEVICES=$1 python train.py --config_path config/camvid.py --exp_name $2 --shared_path /datatmp/flucchesi/experiments --local_path /datatmp/flucchesi/experiments
+CUDA_VISIBLE_DEVICES=$1 python train.py --config_path config/camvid.py --exp_name $2 --shared_path /home/flucchesi/experiments --local_path /home/flucchesi/experiments
+#CUDA_VISIBLE_DEVICES=$1 python train.py --config_path config/camvid.py --exp_name $2 --shared_path /datatmp/flucchesi/experiments --local_path /datatmp/flucchesi/experiments
