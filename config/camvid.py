@@ -19,10 +19,10 @@ pred_model                   = False           # Predict using the model
 
 # Debug
 debug                        = True            # Use only few images for debuging
-debug_images_train           = 50##50              # N images for training in debug mode (-1 means all)
-debug_images_valid           = 30##30              # N images for validation in debug mode (-1 means all)
-debug_images_test            = 30##30              # N images for testing in debug mode (-1 means all)
-debug_n_epochs               = 2 ##2               # N of training epochs in debug mode
+debug_images_train           = -1##50              # N images for training in debug mode (-1 means all)
+debug_images_valid           = -1##30              # N images for validation in debug mode (-1 means all)
+debug_images_test            = -1##30              # N images for testing in debug mode (-1 means all)
+debug_n_epochs               = 200 ##2               # N of training epochs in debug mode
 
 # Batch sizes
 batch_size_train             = 2##2               # Batch size during training
@@ -46,7 +46,7 @@ max_q_size                   = 10              # Maximum size for the data gener
 workers                      = 5               # Maximum number of processes to spin up when using process based threading
 
 # Training parameters
-optimizer                    = 'adam'          # Optimizer
+optimizer                    = 'sgd'          # Optimizer
 learning_rate                = 0.0001          # Training learning rate
 weight_decay                 = 0.              # Weight decay or L2 parameter norm penalty
 n_epochs                     = 1000            # Number of epochs during training
@@ -90,7 +90,7 @@ LRScheduler_S                = 10000            # Step for the 'step' method
 LRScheduler_power            = 0.9              # Power for the 'poly' method
 
 # Callback Snapshot Ensemble
-SE_enabled                   = False            # Enable the callbacks (both learning rate schedule and snapshot model weights saving)
+SE_enabled                   = True            # Enable the callbacks (both learning rate schedule and snapshot model weights saving)
 SE_n_models                  = 5                # Number of snapshot models
 
 
