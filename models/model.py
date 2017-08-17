@@ -132,7 +132,7 @@ class One_Net_Model(Model):
 
 		##added:
 		data = None
-                # Get data for this minibatch
+        # Get data for this minibatch
 		## it was: data = data_gen_queue.get()
 		data = data_gen_queue.queue.get()
                 x_true = data[0]

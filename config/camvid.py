@@ -47,7 +47,7 @@ workers                      = 5               # Maximum number of processes to 
 
 # Training parameters
 optimizer                    = 'sgd'          # Optimizer
-learning_rate                = 0.0001          # Training learning rate
+learning_rate                = 1.          # Training learning rate
 weight_decay                 = 0.              # Weight decay or L2 parameter norm penalty
 n_epochs                     = 1000            # Number of epochs during training
 

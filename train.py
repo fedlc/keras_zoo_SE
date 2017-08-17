@@ -45,13 +45,14 @@ def process(configuration):
     try:
         if cf.train_model:
             # Train the model
+	    start_train = time.time()
             if cf.dataset.data_format == 'npz':
                 model.train2(cf.dataset.load_data_func, cb)
             elif cf.dataset.data_format == 'folders':
                 model.train(train_gen, valid_gen, cb)
             else:
                 raise ValueError('Unknown data format')
-
+	    print ('Train time: ' + str(time.time()-start_train))
         if cf.test_model:
             # Compute validation metrics
             model.test(valid_gen)
