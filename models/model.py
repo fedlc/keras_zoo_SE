@@ -169,6 +169,7 @@ class One_Net_Model(Model):
             # Load models
             self.model.load_weights(self.cf.weights_file)
             model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
+	    print('aaa')
             print(model_list)
 
 

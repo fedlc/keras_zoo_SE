@@ -14,7 +14,7 @@ weights_file                 = 'weights.hdf5'  # Training weight file name
 
 # Parameters
 train_model                  = False            # Train the model
-test_model                   = True           # Test the model
+test_model                   = False           # Test the model
 pred_model                   = False           # Predict using the model
 SE_pred_model                = True            # predict using models from Snapshot Ensemble
 

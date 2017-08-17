@@ -67,6 +67,12 @@ def process(configuration):
             # Compute test metrics
             model.predict(test_gen, tag='pred')
 
+	if cf.SE_pred_model:
+            # Compute validation metrics
+            model.SE_predict(valid_gen, tag='pred')
+            # Compute test metrics
+            model.SE_predict(test_gen, tag='pred')
+
     except KeyboardInterrupt:
         # In case of early stopping, transfer the local files
         do_copy = raw_input('\033[93m KeyboardInterrupt \nDo you want to transfer files to {} ? ([y]/n) \033[0m'
