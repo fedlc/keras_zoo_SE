@@ -221,12 +221,15 @@ class Scheduler():
         M: number of learning iterations
         decay: decay coefficient
         S: step iteration
+        n_epochs = total number of epochs (for SE)
+        SE_n_models = number of snapshot models (for SE)
         from: https://arxiv.org/pdf/1606.02228.pdf
         poly from: https://arxiv.org/pdf/1606.00915.pdf
     """
     def __init__(self, scheduler_type='linear', lr=0.001, M=320000,
                  decay=0.1, S=100000, power=0.9, n_epochs=400, SE_n_models=5):
         # Save parameters
+        ##
         self.scheduler_type = scheduler_type
         self.lr = float(lr)
         self.decay = float(decay)
@@ -237,6 +240,7 @@ class Scheduler():
         self.SE_M = SE_n_models
 
         # Get function
+        ##
         if self.scheduler_type == 'linear':
             self.scheduler_function = self.linear_scheduler
         elif self.scheduler_type == 'step':

@@ -116,6 +116,7 @@ class One_Net_Model(Model):
             return None
 
     # Predict the model
+    ##
     def predict(self, test_gen, tag='pred'):
         if self.cf.pred_model:
             print('\n > Predicting the model...')
@@ -123,18 +124,19 @@ class One_Net_Model(Model):
             self.model.load_weights(self.cf.weights_file)
 
             # Create a data generator
-            ## it was: data_gen_queue, _stop, _generator_threads = GeneratorEnqueuer(self.test_gen, max_q_size=cf.max_q_size)
-            data_gen_queue = GeneratorEnqueuer(test_gen, pickle_safe=True)
+            data_gen_queue, _stop, _generator_threads = GeneratorEnqueuer(self.test_gen, max_q_size=cf.max_q_size)
+            ##data_gen_queue = GeneratorEnqueuer(test_gen, pickle_safe=True)
 
             # Process the dataset
             start_time = time.time()
             for _ in range(int(math.ceil(self.cf.dataset.n_images_train/float(self.cf.batch_size_test)))):
 
-		##added:
-		data = None
-        # Get data for this minibatch
-		## it was: data = data_gen_queue.get()
-		data = data_gen_queue.queue.get()
+        		##added:
+        		##data = None
+                # Get data for this minibatch
+        		data = data_gen_queue.get()
+                ##added:
+		        ##data = data_gen_queue.queue.get()
                 x_true = data[0]
                 y_true = data[1].astype('int32')
 
@@ -153,8 +155,9 @@ class One_Net_Model(Model):
                           tag+str(_), self.cf.dataset.void_class)
 
             # Stop data generator
-	    ## it was:_stop.set()
-            data_gen_queue.stop()
+            _stop.set()
+            ##added
+            ##data_gen_queue.stop()
 
             total_time = time.time() - start_time
             fps = float(self.cf.dataset.n_images_test) / total_time
@@ -162,7 +165,7 @@ class One_Net_Model(Model):
             print ('   Predicting time: {}. FPS: {}. Seconds per Frame: {}'.format(total_time, fps, s_p_f))
 
 
-    ##
+    ## added
     def SE_predict(self, test_gen, tag='pred'):
         if self.cf.SE_pred_model:
             print('\n > Snapshot Ensembling, predicting using models from the ensemble0...')
