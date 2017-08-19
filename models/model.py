@@ -131,12 +131,12 @@ class One_Net_Model(Model):
             start_time = time.time()
             for _ in range(int(math.ceil(self.cf.dataset.n_images_train/float(self.cf.batch_size_test)))):
 
-        		##added:
-        		##data = None
-                # Get data for this minibatch
-        		data = data_gen_queue.get()
                 ##added:
-		        ##data = data_gen_queue.queue.get()
+                ##data = None
+                # Get data for this minibatch
+                data = data_gen_queue.get()
+                ##added:
+                ##data = data_gen_queue.queue.get()
                 x_true = data[0]
                 y_true = data[1].astype('int32')
 
