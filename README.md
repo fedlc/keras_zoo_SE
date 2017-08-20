@@ -1,7 +1,3 @@
-# Snapshot Ensembling for semantic segmentation (integration in keras_zoo)
-
-# ----------------------------------------------------------------------
-
 # Keras implementation of Classification, Detection and Segmentation Networks
 
 ## Introduction

@@ -4,6 +4,7 @@ import os
 from keras.callbacks import (EarlyStopping, ModelCheckpoint, CSVLogger,
                              LearningRateScheduler, TensorBoard)
 
+##
 from callbacks import (History_plot, Jacc_new, Save_results,
                        LearningRateSchedulerBatch, Scheduler, SE_SaveModels)
 
@@ -64,7 +65,7 @@ class Callbacks_Factory():
 
         # Learning rate scheduler
         if cf.LRScheduler_enabled:
-            print('   Learning rate scheduler by batch')
+            print('   Learning rate cheduler by batch')
             scheduler = Scheduler(cf.LRScheduler_type, cf.learning_rate,
                                   cf.LRScheduler_M, cf.LRScheduler_decay,
                                   cf.LRScheduler_S, cf.LRScheduler_power)
@@ -88,6 +89,7 @@ class Callbacks_Factory():
                                write_graph=cf.TensorBoard_write_graph,
                                write_images=cf.TensorBoard_write_images)]
 
+
         ## Snapshot Ensembling callback
         if cf.SE_enabled:
             print('   Snapshot Ensembling')
@@ -105,4 +107,8 @@ class Callbacks_Factory():
             cb += [SE_SaveModels(n_epochs=cf.n_epochs, n_models=cf.SE_n_models,
                                  save_path=cf.savepath_SE_weights)]
 
+
+
+
+        # Output the list of callbacks
         return cb

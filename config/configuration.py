@@ -46,7 +46,6 @@ class Configuration():
 
 
 
-
         ## Create output folders for the weights for SE callback (if enabled)
         if cf.SE_enabled:
             cf.savepath_SE_weights = os.path.join(experiments_path,
@@ -54,9 +53,6 @@ class Configuration():
                                                  'SE_weights')
             if not os.path.exists(cf.savepath_SE_weights):
                 os.makedirs(cf.savepath_SE_weights)
-
-
-
 
 
 

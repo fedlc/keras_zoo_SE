@@ -115,8 +115,8 @@ class One_Net_Model(Model):
         else:
             return None
 
-    # Predict the model
     ##
+    # Predict the model
     def predict(self, test_gen, tag='pred'):
         if self.cf.pred_model:
             print('\n > Predicting the model...')
@@ -133,10 +133,13 @@ class One_Net_Model(Model):
 
                 ##added:
                 ##data = None
+
                 # Get data for this minibatch
                 data = data_gen_queue.get()
+
                 ##added:
                 ##data = data_gen_queue.queue.get()
+
                 x_true = data[0]
                 y_true = data[1].astype('int32')
 
@@ -156,6 +159,7 @@ class One_Net_Model(Model):
 
             # Stop data generator
             _stop.set()
+
             ##added
             ##data_gen_queue.stop()
 
@@ -165,16 +169,15 @@ class One_Net_Model(Model):
             print ('   Predicting time: {}. FPS: {}. Seconds per Frame: {}'.format(total_time, fps, s_p_f))
 
 
-    ## added
+    ##
     def SE_predict(self, test_gen, tag='pred'):
         if self.cf.SE_pred_model:
             print('\n > Snapshot Ensembling, predicting using models from the ensemble0...')
             # Load models
             self.model.load_weights(self.cf.weights_file)
             model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
-	    print('aaa')
             print(model_list)
-
+            print('AAAAAAAAAAAA')
 
 
 
@@ -187,7 +190,6 @@ class One_Net_Model(Model):
 
             # Evaluate model
             start_time = time.time()
-
             ## Returns scalar test loss (if the model has no metrics) or list
             ## of scalars (if the model computes other metrics).
             test_metrics = self.model.evaluate_generator(test_gen,
@@ -213,8 +215,6 @@ class One_Net_Model(Model):
 
                 ## metrics_dict: {'U9': 8084.333333333333, 'U8': 54890.0, 'U5': 244498.66666666666, 'U4': 161890.33333333334, 'U7': 36734.333333333336, 'U6': 8936.0, 'U1': 531287.0, 'U0': 145011.33333333334, 'U3': 1708693.3333333333, 'U2': 5956.0, 'U10': 26039.0, 'I9': 0.0, 'I8': 0.0, 'I1': 0.0, 'I0': 0.0, 'I3': 485366.33333333331, 'I2': 0.0, 'I5': 0.0, 'I4': 0.0, 'I7': 0.0, 'I6': 0.0, 'I10': 0.0, 'acc': 0.28408331672350567, 'loss': 2.3173979123433432}
 
-
-                print(self.model.metrics_names)
 
                 I = np.zeros(self.cf.dataset.n_classes)
                 U = np.zeros(self.cf.dataset.n_classes)

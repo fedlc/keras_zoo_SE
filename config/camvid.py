@@ -4,8 +4,8 @@ dataset_name                 = 'camvid'        # Dataset name
 dataset_name2                = None            # Second dataset name. None if not Domain Adaptation
 perc_mb2                     = None            # Percentage of data from the second dataset in each minibatch
 
-# Model
 ##
+# Model
 model_name                   = 'segnet_vgg'          # Model to use ['fcn8' | 'segnet_basic' | 'segnet_vgg' | 'resnetFCN' | 'lenet' | 'alexNet' | 'vgg16' |  'vgg19' | 'resnet50' | 'InceptionV3']
 freeze_layers_from           = None #'base_model'            # Freeze layers from 0 to this layer during training (Useful for finetunning) [None | 'base_model' | Layer_id]
 show_model                   = True            # Show the architecture layers
@@ -13,30 +13,29 @@ load_imageNet                = False           # Load Imagenet weights and norma
 load_pretrained              = False           # Load a pretrained model for doing finetuning
 weights_file                 = 'weights.hdf5'  # Training weight file name
 
-# Parameters
 ##
+# Parameters
 train_model                  = True            # Train the model
 test_model                   = True           # Test the model
 pred_model                   = False           # Predict using the model
-SE_pred_model                = False            # predict using models from Snapshot Ensemble
-
-
-# Debug
 ##
+SE_pred_model                = False           # predict using models from Snapshot Ensemble
+
+##
+# Debug
 debug                        = True            # Use only few images for debuging
-debug_images_train           = -1##50              # N images for training in debug mode (-1 means all)
-debug_images_valid           = -1##30              # N images for validation in debug mode (-1 means all)
-debug_images_test            = -1##30              # N images for testing in debug mode (-1 means all)
-debug_n_epochs               = 200 ##2               # N of training epochs in debug mode
+debug_images_train           = -1 #50              # N images for training in debug mode (-1 means all)
+debug_images_valid           = -1 #30              # N images for validation in debug mode (-1 means all)
+debug_images_test            = -1 #30              # N images for testing in debug mode (-1 means all)
+debug_n_epochs               = 300 #2             # N of training epochs in debug mode
 
 # Batch sizes
-##
-batch_size_train             = 2##2               # Batch size during training
-batch_size_valid             = 10##10              # Batch size during validation
-batch_size_test              = 10##10              # Batch size during testing
+batch_size_train             = 2               # Batch size during training
+batch_size_valid             = 10              # Batch size during validation
+batch_size_test              = 10              # Batch size during testing
 crop_size_train              = None # (256, 256)      # Crop size during training (Height, Width) or None
 crop_size_valid              = None            # Crop size during validation
-crop_size_test               = None             # Crop size during testing
+crop_size_test               = None            # Crop size during testing
 resize_train                 = None            # Resize the image during training (Height, Width) or None
 resize_valid                 = None            # Resize the image during validation
 resize_test                  = None            # Resize the image during testing
@@ -51,8 +50,8 @@ seed_test                    = 1924            # Random seed for the testing shu
 max_q_size                   = 10              # Maximum size for the data generator queue
 workers                      = 5               # Maximum number of processes to spin up when using process based threading
 
-# Training parameters
 ##
+# Training parameters
 optimizer                    = 'sgd'          # Optimizer
 learning_rate                = 1.          # Training learning rate
 weight_decay                 = 0.              # Weight decay or L2 parameter norm penalty
@@ -75,17 +74,14 @@ earlyStopping_verbose        = 0               # Verbosity of the early stopping
 checkpoint_enabled           = True            # Enable the Callback
 checkpoint_monitor           = 'val_jaccard'   # Metric to monitor
 checkpoint_mode              = 'max'           # Mode ['max' | 'min']
-checkpoint_save_best_only    = True            # Save best or last model ##change to last?
+##change to last?
+checkpoint_save_best_only    = True            # Save best or last model
 checkpoint_save_weights_only = True            # Save only weights or also model
 checkpoint_verbose           = 0               # Verbosity of the checkpoint
 
 # Callback plot
 plotHist_enabled             = True           # Enable the Callback
 plotHist_verbose             = 0               # Verbosity of the callback
-
-
-
-
 
 # Callback learning rate scheduler
 LRScheduler_enabled          = False             # Enable the Callback
@@ -94,16 +90,12 @@ LRScheduler_type             = 'linear'         # Type of scheduler ['linear' | 
 LRScheduler_M                = 75000            # Number of iterations/epochs expected until convergence
 LRScheduler_decay            = 0.1              # Decay for 'step' method
 LRScheduler_S                = 10000            # Step for the 'step' method
-LRScheduler_power            = 0.9              # Power for the 'poly' method
+LRScheduler_power            = 0.9              # Power for te poly method
 
-# Callback Snapshot Ensemble
 ##
-SE_enabled                   = True            # Enable the callbacks (both: learning rate schedule and snapshot model weights saving)
+# Callback Snapshot Ensemble
+SE_enabled                   = True             # Enable the callbacks (both: learning rate schedule and snapshot model weights saving)
 SE_n_models                  = 5                # Number of snapshot models
-
-
-
-
 
 # Callback TensorBoard
 TensorBoard_enabled          = True             # Enable the Callback

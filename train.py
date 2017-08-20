@@ -46,8 +46,8 @@ def process(configuration):
     try:
         if cf.train_model:
             # Train the model
-            ## added start_train
             start_train = time.time()
+
             if cf.dataset.data_format == 'npz':
                 model.train2(cf.dataset.load_data_func, cb)
             elif cf.dataset.data_format == 'folders':
@@ -73,6 +73,7 @@ def process(configuration):
             model.SE_predict(valid_gen, tag='pred')
             # Compute test metrics
             model.SE_predict(test_gen, tag='pred')
+
 
     except KeyboardInterrupt:
         # In case of early stopping, transfer the local files
@@ -128,14 +129,17 @@ def main():
                                            'command line'
 
     # Define the user paths
-    ##
-    shared_path = arguments.shared_path ##/home/flucchesi/experiments
-    local_path = arguments.local_path   ##/home/flucchesi/experiments
+    shared_path = arguments.shared_path
+    local_path = arguments.local_path
     dataset_path = os.path.join(local_path, 'Datasets')
     shared_dataset_path = os.path.join(shared_path, 'Datasets')
     experiments_path = os.path.join(local_path, 'Experiments') ## it was: experiments_path = os.path.join(local_path, getuser(), 'Experiments')
     shared_experiments_path = os.path.join(shared_path, 'Experiments') ## it was: shared_experiments_path = os.path.join(shared_path, getuser(), 'Experiments')
+
     usr_path = os.path.join('/home/', getuser())
+
+
+
 
     # Load configuration files
     configuration = Configuration(arguments.config_path, arguments.exp_name,
