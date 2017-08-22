@@ -129,6 +129,7 @@ class One_Net_Model(Model):
 
             # Process the dataset
             start_time = time.time()
+
             for _ in range(int(math.ceil(self.cf.dataset.n_images_train/float(self.cf.batch_size_test)))):
 
                 ##added:
@@ -170,14 +171,83 @@ class One_Net_Model(Model):
 
 
     ##
-    def SE_predict(self, test_gen, tag='pred'):
+    def SE_predict(self, test_gen, tag='SE_pred'):
         if self.cf.SE_pred_model:
             print('\n > Snapshot Ensembling, predicting using models from the ensemble0...')
             # Load models
+            #self.model.load_weights(self.cf.weights_file)
+            #model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
+            #print(model_list)
+            #print('AAAAAAAAAAAA')
+
+
+
+            # ------------------------------------------
+            # Create a data generator
+            ## The task of an Enqueuer is to use parallelism to speed up preprocessing.
+            ## This is done with processes or threads.
+
+            ## same values from Save_results callback (?)
+            nb_worker = 5
+            max_q_size = 10
+
+
+            # Load best trained model
             self.model.load_weights(self.cf.weights_file)
-            model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
-            print(model_list)
-            print('AAAAAAAAAAAA')
+
+            enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
+            enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
+                           wait_time=0.05)
+
+            # Process the dataset
+
+            for _ in range(self.epoch_length):
+
+                # Get data for this minibatch
+                data = None
+                while enqueuer.is_running():
+                    if not enqueuer.queue.empty():
+                        data = enqueuer.queue.get()
+                        break
+                    else:
+                        time.sleep(0.05)
+                x_true = data[0]
+                y_true = data[1].astype('int32')
+
+                # Get prediction for this minibatch
+                y_pred = self.model.predict(x_true)
+
+                # Reshape y_true and compute the y_pred argmax
+                if K.image_dim_ordering() == 'th':
+                    y_pred = np.argmax(y_pred, axis=1)
+                    y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[2],
+                                                 y_true.shape[3]))
+                else:
+                    y_pred = np.argmax(y_pred, axis=3)
+                    y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[1],
+                                                 y_true.shape[2]))
+                # Save output images
+                save_img3(x_true, y_true, y_pred, self.save_path, epoch,
+                          self.color_map, self.classes, self.tag+str(_),
+                          self.void_label, self.n_legend_rows)
+
+            # Stop data generator
+            if enqueuer is not None:
+                enqueuer.stop()
+
+            # ------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

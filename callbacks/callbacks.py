@@ -171,8 +171,9 @@ class Save_results(Callback):
         self.max_q_size = max_q_size
 
     def on_epoch_end(self, epoch, logs={}):
-
         # Create a data generator
+        ## The task of an Enqueuer is to use parallelism to speed up preprocessing.
+        ## This is done with processes or threads.
         enqueuer = GeneratorEnqueuer(self.generator, pickle_safe=True)
         enqueuer.start(nb_worker=self.nb_worker, max_q_size=self.max_q_size,
                        wait_time=0.05)
@@ -204,6 +205,21 @@ class Save_results(Callback):
                 y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[1],
                                              y_true.shape[2]))
             # Save output images
+            print('\n\n')
+            print(y_pred)
+            print('y_pred.shape[0]')
+            print (y_pred.shape[0])
+            print('y_pred.shape[1]')
+            print (y_pred.shape[1])
+            print('y_pred.shape[2]')
+            print (y_pred.shape[2])
+            print('y_pred.shape[3]')
+            print (y_pred.shape[3])
+            print('y_pred.shape[4]')
+            print (y_pred.shape[4])
+            print('y_pred.shape[5]')
+            print (y_pred.shape[5])
+            print('\n\n')
             save_img3(x_true, y_true, y_pred, self.save_path, epoch,
                       self.color_map, self.classes, self.tag+str(_),
                       self.void_label, self.n_legend_rows)

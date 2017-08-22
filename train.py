@@ -44,6 +44,20 @@ def process(configuration):
     cb = Callbacks_Factory().make(cf, valid_gen)
 
     try:
+        import math
+        print('\n')
+        print('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+        print('\n')
+        print('n_images_train')
+        print(cf.dataset.n_images_train)
+        print('\n')
+        print('batch_size_test')
+        print(float(cf.batch_size_test))
+        print('\n')
+        print('\nratio')
+        print(int(math.ceil(cf.dataset.n_images_train/float(cf.batch_size_test))))
+        print('\n')
+
         if cf.train_model:
             # Train the model
             start_train = time.time()
@@ -61,7 +75,6 @@ def process(configuration):
             model.test(valid_gen)
             # Compute test metrics
             model.test(test_gen)
-
         if cf.pred_model:
             # Compute validation metrics
             model.predict(valid_gen, tag='pred')
