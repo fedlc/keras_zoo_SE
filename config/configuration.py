@@ -55,9 +55,9 @@ class Configuration():
                 os.makedirs(cf.savepath_SE_weights)
 
 
-        ## so it doesn't override the file config.py.
+        ## To avoid to override the config.py file from training:
         ## config.py is created only if train_model is True
-        ## if also SE_pred_model is true, another config log file is created
+        ## if SE_pred_model or pred_model is true, but without training, then another config log file is created
         # Copy config file
         if (cf.SE_pred_model and not cf.train_model):
             shutil.copyfile(config_path, os.path.join(cf.savepath, "SE_pred_config.py"))

@@ -142,6 +142,9 @@ class Jacc_new(Callback):
             logs[str(i)+'_jacc'] = self.jacc_percl[i]
         self.jacc = np.nanmean(self.jacc_percl)
         logs['jaccard'] = self.jacc
+        ##
+        ##print('\nn classes:')
+        ##print(self.n_classes)
 
         for i in range(self.n_classes):
             self.val_I[i] = logs['val_I'+str(i)]
@@ -179,6 +182,7 @@ class Save_results(Callback):
                        wait_time=0.05)
 
         # Process the dataset
+        ## it
         for _ in range(self.epoch_length):
 
             # Get data for this minibatch
@@ -205,24 +209,18 @@ class Save_results(Callback):
                 y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[1],
                                              y_true.shape[2]))
             # Save output images
+            save_img3(x_true, y_true, y_pred, self.save_path, epoch,
+                      self.color_map, self.classes, self.tag+str(_),
+                      self.void_label, self.n_legend_rows)
             print('\n\n')
-            print(y_pred)
+            print(y_pred[0][0])
             print('y_pred.shape[0]')
             print (y_pred.shape[0])
             print('y_pred.shape[1]')
             print (y_pred.shape[1])
             print('y_pred.shape[2]')
             print (y_pred.shape[2])
-            print('y_pred.shape[3]')
-            print (y_pred.shape[3])
-            print('y_pred.shape[4]')
-            print (y_pred.shape[4])
-            print('y_pred.shape[5]')
-            print (y_pred.shape[5])
             print('\n\n')
-            save_img3(x_true, y_true, y_pred, self.save_path, epoch,
-                      self.color_map, self.classes, self.tag+str(_),
-                      self.void_label, self.n_legend_rows)
 
         # Stop data generator
         if enqueuer is not None:
