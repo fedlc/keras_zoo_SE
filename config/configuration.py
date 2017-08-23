@@ -55,9 +55,17 @@ class Configuration():
                 os.makedirs(cf.savepath_SE_weights)
 
 
-
+        ## so it doesn't override the file config.py.
+        ## config.py is created only if train_model is True
+        ## if also SE_pred_model is true, another config log file is created
         # Copy config file
-        shutil.copyfile(config_path, os.path.join(cf.savepath, "config.py"))
+        if (cf.SE_pred_model and not cf.train_model):
+            shutil.copyfile(config_path, os.path.join(cf.savepath, "SE_pred_config.py"))
+        elif (cf.train_model):
+            shutil.copyfile(config_path, os.path.join(cf.savepath, "config.py"))
+
+
+
 
         # Load dataset configuration
         cf.dataset = self.load_config_dataset(cf.dataset_name, dataset_path,
