@@ -46,8 +46,6 @@ def process(configuration):
     try:
         import math
         print('\n')
-        print('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
-        print('\n')
         print('n_images_train')
         print(cf.dataset.n_images_train)
         print('\n')
@@ -79,7 +77,7 @@ def process(configuration):
             # Compute validation metrics
             model.predict(valid_gen, tag='pred')
             # Compute test metrics
-            model.predict(test_gen, tag='pred')
+            #model.predict(test_gen, tag='pred')
 
         if cf.SE_pred_model:
             # Compute validation metrics

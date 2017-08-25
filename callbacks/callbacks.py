@@ -58,6 +58,7 @@ def progbar_on_epoch_end(self, epoch, logs={}):
 
 
 # Plot history
+## save plot1.png
 class History_plot(Callback):
 
     # Constructor
@@ -124,7 +125,10 @@ class Jacc_new(Callback):
         setattr(ProgbarLogger, 'on_batch_end', progbar_on_batch_end)
         setattr(ProgbarLogger, 'on_epoch_end', progbar_on_epoch_end)
 
+    ## computes the values of the metrics (printed during training, after every batch)
+    ## computes only on train data
     def on_batch_end(self, batch, logs={}):
+        ## logs is a dictionary (contains metrics).See keras documentation
         for i in range(self.n_classes):
             self.I[i] = logs['I'+str(i)]
             self.U[i] = logs['U'+str(i)]
@@ -134,7 +138,10 @@ class Jacc_new(Callback):
         self.jacc = np.nanmean(self.jacc_percl)
         logs['jaccard'] = self.jacc
 
+    ## same, but computes metrics to print at the epoch end
+    ## computes on train and validation data
     def on_epoch_end(self, epoch, logs={}):
+        ## on train data
         for i in range(self.n_classes):
             self.I[i] = logs['I'+str(i)]
             self.U[i] = logs['U'+str(i)]
@@ -142,10 +149,8 @@ class Jacc_new(Callback):
             logs[str(i)+'_jacc'] = self.jacc_percl[i]
         self.jacc = np.nanmean(self.jacc_percl)
         logs['jaccard'] = self.jacc
-        ##
-        ##print('\nn classes:')
-        ##print(self.n_classes)
 
+        ## on validation data
         for i in range(self.n_classes):
             self.val_I[i] = logs['val_I'+str(i)]
             self.val_U[i] = logs['val_U'+str(i)]
@@ -173,6 +178,12 @@ class Save_results(Callback):
         self.nb_worker = nb_worker
         self.max_q_size = max_q_size
 
+        ##
+        # nb_worker=5
+        # max_q_size=10
+        # generator = valid_gen
+
+
     def on_epoch_end(self, epoch, logs={}):
         # Create a data generator
         ## The task of an Enqueuer is to use parallelism to speed up preprocessing.
@@ -182,7 +193,6 @@ class Save_results(Callback):
                        wait_time=0.05)
 
         # Process the dataset
-        ## it
         for _ in range(self.epoch_length):
 
             # Get data for this minibatch
@@ -199,6 +209,35 @@ class Save_results(Callback):
             # Get prediction for this minibatch
             y_pred = self.model.predict(x_true)
 
+            ##
+            """
+            print('\n\n')
+            print('y_pred.shape[0]')
+            print (y_pred.shape[0])
+            print('y_pred.shape[1]')
+            print (y_pred.shape[1])
+            print('y_pred.shape[2]')
+            print (y_pred.shape[2])
+            print('y_pred.shape[3]')
+            print (y_pred.shape[3])
+
+            print('\n\n')
+
+            fff = open( 'y_pred_ep' + str(epoch) + '.py', 'w' )
+
+            for aaa in range(y_pred.shape[0]):
+                for bbb in range(y_pred.shape[1]):
+                    for ccc in range(y_pred.shape[2]):
+                        for ddd in range(y_pred.shape[3]):
+                            eee = y_pred[aaa][bbb][ccc][ddd]
+                            if (eee > 0 and eee < 1):
+                                print>>fff, eee
+                        #fff.write(eee + '\n')
+
+            #fff.write( repr(*y_pred) + '\n' )
+            fff.close()
+            """
+
             # Reshape y_true and compute the y_pred argmax
             if K.image_dim_ordering() == 'th':
                 y_pred = np.argmax(y_pred, axis=1)
@@ -212,6 +251,12 @@ class Save_results(Callback):
             save_img3(x_true, y_true, y_pred, self.save_path, epoch,
                       self.color_map, self.classes, self.tag+str(_),
                       self.void_label, self.n_legend_rows)
+
+        # Stop data generator
+        if enqueuer is not None:
+            enqueuer.stop()
+
+"""
             print('\n\n')
             print(y_pred[0][0])
             print('y_pred.shape[0]')
@@ -221,10 +266,7 @@ class Save_results(Callback):
             print('y_pred.shape[2]')
             print (y_pred.shape[2])
             print('\n\n')
-
-        # Stop data generator
-        if enqueuer is not None:
-            enqueuer.stop()
+"""
 
 ##
 class Scheduler():

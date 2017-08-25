@@ -16,8 +16,8 @@ weights_file                 = 'weights.hdf5'  # Training weight file name
 ##
 # Parameters
 train_model                  = True            # Train the model
-test_model                   = True           # Test the model
-pred_model                   = False           # Predict using the model
+test_model                   = True         # Test the model
+pred_model                   = True           # Predict using the model
 ##
 SE_pred_model                = False           # predict using models from Snapshot Ensemble
 
@@ -31,7 +31,7 @@ debug_n_epochs               = 2 #2             # N of training epochs in debug 
 
 # Batch sizes
 batch_size_train             = 2               # Batch size during training
-batch_size_valid             = 9              # Batch size during validation
+batch_size_valid             = 10              # Batch size during validation
 batch_size_test              = 10              # Batch size during testing
 crop_size_train              = None # (256, 256)      # Crop size during training (Height, Width) or None
 crop_size_valid              = None            # Crop size during validation

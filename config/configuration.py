@@ -39,32 +39,41 @@ class Configuration():
         cf.savepath = os.path.join(experiments_path, cf.dataset_name, cf.exp_name)
         cf.final_savepath = os.path.join(shared_experiments_path, cf.dataset_name,
                                          cf.exp_name)
+
+
+        ## Modify savepath if we are training just to make predict work
+        ## add also test_model case?
+        ## (it is provisional, see notes)
+        if (cf.SE_pred_model or cf.pred_model):
+            cf.real_savepath = cf.savepath
+            cf.savepath = os.path.join(cf.savepath, 'fake_training_savepath')
+            cf.final_savepath = os.path.join(cf.final_savepath, 'fake_training_savepath')
+
+
         cf.log_file = os.path.join(cf.savepath, "logfile.log")
         if not os.path.exists(cf.savepath):
             os.makedirs(cf.savepath)
         cf.usr_path = self.usr_path
 
-
-
         ## Create output folders for the weights for SE callback (if enabled)
         if cf.SE_enabled:
-            cf.savepath_SE_weights = os.path.join(experiments_path,
-                                                 cf.dataset_name, cf.exp_name,
-                                                 'SE_weights')
+            cf.savepath_SE_weights = os.path.join(experiments_path, cf.dataset_name,
+                                                  cf.exp_name, 'SE_weights')
             if not os.path.exists(cf.savepath_SE_weights):
                 os.makedirs(cf.savepath_SE_weights)
 
 
-        ## To avoid to override the config.py file from training:
-        ## config.py is created only if train_model is True
-        ## if SE_pred_model or pred_model is true, but without training, then another config log file is created
         # Copy config file
-        if (cf.SE_pred_model and not cf.train_model):
-            shutil.copyfile(config_path, os.path.join(cf.savepath, "SE_pred_config.py"))
-        elif (cf.train_model):
-            shutil.copyfile(config_path, os.path.join(cf.savepath, "config.py"))
+        shutil.copyfile(config_path, os.path.join(cf.savepath, "config.py"))
 
 
+        ## Create folder for predictions
+        if (cf.pred_model):
+            cf.savepath_pred = os.path.join(experiments_path,
+                                                 cf.dataset_name, cf.exp_name,
+                                                 'predictions')
+            if not os.path.exists(cf.savepath_pred):
+                os.makedirs(cf.savepath_pred)
 
 
         # Load dataset configuration

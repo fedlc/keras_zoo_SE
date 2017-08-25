@@ -120,27 +120,88 @@ class One_Net_Model(Model):
     def predict(self, test_gen, tag='pred'):
         if self.cf.pred_model:
             print('\n > Predicting the model...')
+
+            # Load best trained model
+
+            weights_fl = os.path.join(self.cf.real_savepath, self.cf.weights_file)
+            self.model.load_weights(weights_fl)
+
+            ## same values from Save_results callback (?)
+            nb_worker = 5
+            max_q_size = 10
+
+            enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
+            enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
+                           wait_time=0.05)
+
+            # Process the dataset
+            ##
+            for _ in range(1):
+
+
+                # Get data for this minibatch
+                data = None
+
+                print(enqueuer.is_running())
+
+                while enqueuer.is_running():
+                    if not enqueuer.queue.empty():
+                        print('inside')
+                        data = enqueuer.queue.get()
+                        break
+                    else:
+                        time.sleep(0.05)
+                #print(data)
+                x_true = data[0]
+                y_true = data[1].astype('int32')
+                ## both x_true and y_true contain batch_size_valid images ("valid" if test_gen==valid_gen)
+
+
+                # Get prediction for this minibatch
+                ## this predict is from keras since model is a Keras Model
+                y_pred = self.model.predict(x_true)
+
+
+
+                # Reshape y_true and compute the y_pred argmax
+                if K.image_dim_ordering() == 'th':
+                    y_pred = np.argmax(y_pred, axis=1)
+                    y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[2],
+                                                 y_true.shape[3]))
+                else:
+                    y_pred = np.argmax(y_pred, axis=3)
+                    y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[1],
+                                                 y_true.shape[2]))
+                # Save output images
+                ##
+                save_img3(image_batch=x_true, mask_batch=y_true, output=y_pred,
+                          out_images_folder=self.cf.savepath_pred, epoch=-1,
+                          color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
+                          tag=tag, void_label=self.cf.dataset.void_class, n_legend_rows=1)
+
+            # Stop data generator
+            if enqueuer is not None:
+                enqueuer.stop()
+
+
+    """
+    OLD VERSION OF predict
+    # Predict the model
+    def predict(self, test_gen, tag='pred'):
+        if self.cf.pred_model:
+            print('\n > Predicting the model...')
             # Load best trained model
             self.model.load_weights(self.cf.weights_file)
 
             # Create a data generator
             data_gen_queue, _stop, _generator_threads = GeneratorEnqueuer(self.test_gen, max_q_size=cf.max_q_size)
-            ##data_gen_queue = GeneratorEnqueuer(test_gen, pickle_safe=True)
 
             # Process the dataset
             start_time = time.time()
-
             for _ in range(int(math.ceil(self.cf.dataset.n_images_train/float(self.cf.batch_size_test)))):
-
-                ##added:
-                ##data = None
 
                 # Get data for this minibatch
                 data = data_gen_queue.get()
-
-                ##added:
-                ##data = data_gen_queue.queue.get()
-
                 x_true = data[0]
                 y_true = data[1].astype('int32')
 
@@ -161,14 +222,13 @@ class One_Net_Model(Model):
             # Stop data generator
             _stop.set()
 
-            ##added
-            ##data_gen_queue.stop()
-
             total_time = time.time() - start_time
             fps = float(self.cf.dataset.n_images_test) / total_time
             s_p_f = total_time / float(self.cf.dataset.n_images_test)
             print ('   Predicting time: {}. FPS: {}. Seconds per Frame: {}'.format(total_time, fps, s_p_f))
 
+
+    """
 
     ##
     def SE_predict(self, test_gen, tag='SE_pred'):
@@ -187,53 +247,9 @@ class One_Net_Model(Model):
             ## The task of an Enqueuer is to use parallelism to speed up preprocessing.
             ## This is done with processes or threads.
 
-            ## same values from Save_results callback (?)
-            nb_worker = 5
-            max_q_size = 10
 
 
-            # Load best trained model
-            self.model.load_weights(self.cf.weights_file)
 
-            enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
-            enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
-                           wait_time=0.05)
-
-            # Process the dataset
-
-            for _ in range(self.epoch_length):
-
-                # Get data for this minibatch
-                data = None
-                while enqueuer.is_running():
-                    if not enqueuer.queue.empty():
-                        data = enqueuer.queue.get()
-                        break
-                    else:
-                        time.sleep(0.05)
-                x_true = data[0]
-                y_true = data[1].astype('int32')
-
-                # Get prediction for this minibatch
-                y_pred = self.model.predict(x_true)
-
-                # Reshape y_true and compute the y_pred argmax
-                if K.image_dim_ordering() == 'th':
-                    y_pred = np.argmax(y_pred, axis=1)
-                    y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[2],
-                                                 y_true.shape[3]))
-                else:
-                    y_pred = np.argmax(y_pred, axis=3)
-                    y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[1],
-                                                 y_true.shape[2]))
-                # Save output images
-                save_img3(x_true, y_true, y_pred, self.save_path, epoch,
-                          self.color_map, self.classes, self.tag+str(_),
-                          self.void_label, self.n_legend_rows)
-
-            # Stop data generator
-            if enqueuer is not None:
-                enqueuer.stop()
 
             # ------------------------------------------
 
