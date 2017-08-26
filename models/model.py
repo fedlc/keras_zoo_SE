@@ -125,6 +125,8 @@ class One_Net_Model(Model):
 
             # Load best trained model
 
+            print(test_gen)
+
             weights_fl = os.path.join(self.cf.real_savepath, "weights.hdf5")
             self.model.load_weights(weights_fl)
 
@@ -132,14 +134,20 @@ class One_Net_Model(Model):
             nb_worker = 5
             max_q_size = 10
 
-            enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
-            enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
-                           wait_time=0.05)
 
             # Process the dataset
             ##
-            for _ in range(1):
 
+
+            f = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", "w") ## "a"
+            dset = f.create_dataset("y_pred_dataset", (10,360,480))
+
+            for _ in range(2):
+
+                enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
+                print(enqueuer)
+                enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
+                               wait_time=0.05)
 
                 # Get data for this minibatch
                 data = None
@@ -172,6 +180,8 @@ class One_Net_Model(Model):
                 print(type(y_pred))
                 print(y_pred.shape)
 
+
+
                 """
                 print('data')
                 print(type(data))
@@ -202,8 +212,7 @@ class One_Net_Model(Model):
                 print(type(y_pred))
                 print(y_pred.shape)
 
-                f = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", "w") ## "a"
-                dset = f.create_dataset("y_pred_dataset", (10,360,480))
+
                 dset[0:10] = y_pred
                 ##
                 print('dset')
@@ -216,7 +225,10 @@ class One_Net_Model(Model):
                 save_img3(image_batch=x_true, mask_batch=y_true, output=y_pred,
                           out_images_folder=self.cf.savepath_pred, epoch=-1,
                           color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
-                          tag=tag, void_label=self.cf.dataset.void_class, n_legend_rows=1)
+                          tag=tag+str(_), void_label=self.cf.dataset.void_class, n_legend_rows=1)
+
+                if (_ < 1):
+                    test_gen.next()
 
             # Stop data generator
             if enqueuer is not None:
