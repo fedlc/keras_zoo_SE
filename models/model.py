@@ -8,6 +8,8 @@ from tools.save_images import save_img3
 from keras import backend as K
 # from tools.yolo_utils import *
 
+##
+import h5py
 
 # Keras dim orders
 def channel_idx():
@@ -123,7 +125,7 @@ class One_Net_Model(Model):
 
             # Load best trained model
 
-            weights_fl = os.path.join(self.cf.real_savepath, self.cf.weights_file)
+            weights_fl = os.path.join(self.cf.real_savepath, "weights.hdf5")
             self.model.load_weights(weights_fl)
 
             ## same values from Save_results callback (?)
@@ -151,15 +153,38 @@ class One_Net_Model(Model):
                         break
                     else:
                         time.sleep(0.05)
-                #print(data)
-                x_true = data[0]
-                y_true = data[1].astype('int32')
-                ## both x_true and y_true contain batch_size_valid images ("valid" if test_gen==valid_gen)
 
+                x_true = data[0]
+                print('x_true')
+                print(type(x_true))
+                print(x_true.shape)
+                print(len(x_true))
+
+                y_true = data[1].astype('int32')
+                print('y_true')
+                print(type(y_true))
+                print(y_true.shape)
 
                 # Get prediction for this minibatch
                 ## this predict is from keras since model is a Keras Model
                 y_pred = self.model.predict(x_true)
+                print('y_pred')
+                print(type(y_pred))
+                print(y_pred.shape)
+
+                """
+                print('data')
+                print(type(data))
+                print(len(data[0]))
+                #data = np.array(data)
+                print(type(data))
+                print(data.shape)
+                """
+
+                ## both x_true and y_true contain batch_size_valid images ("valid" if test_gen==valid_gen)
+                ## x_true is a numpy.ndarray with shape (10, 360, 480, 3)
+                ## y_true is a numpy.ndarray with shape (10, 360, 480, 1)
+                ## y_pred is a numpy.ndarray with shape (10, 360, 480, 11)
 
 
 
@@ -172,6 +197,20 @@ class One_Net_Model(Model):
                     y_pred = np.argmax(y_pred, axis=3)
                     y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[1],
                                                  y_true.shape[2]))
+
+                print('y_pred_argmax')
+                print(type(y_pred))
+                print(y_pred.shape)
+
+                f = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", "w") ## "a"
+                dset = f.create_dataset("y_pred_dataset", (10,360,480))
+                dset[0:10] = y_pred
+                ##
+                print('dset')
+                print(type(dset))
+                print(dset.shape)
+
+
                 # Save output images
                 ##
                 save_img3(image_batch=x_true, mask_batch=y_true, output=y_pred,
@@ -182,6 +221,10 @@ class One_Net_Model(Model):
             # Stop data generator
             if enqueuer is not None:
                 enqueuer.stop()
+
+            ## close h5py file
+            f.close()
+
 
 
     """
@@ -270,6 +313,14 @@ class One_Net_Model(Model):
     # Test the model
     def test(self, test_gen):
         if self.cf.test_model:
+            pass
+
+
+
+
+        """
+        OLD TEST
+        if self.cf.test_model:
             print('\n > Testing the model...')
             # Load best trained model
             self.model.load_weights(self.cf.weights_file)
@@ -315,3 +366,5 @@ class One_Net_Model(Model):
                 # Compute jaccard mean
                 jacc_mean = np.nanmean(jacc_percl)
                 print ('   Jaccard mean: {}'.format(jacc_mean))
+
+        """

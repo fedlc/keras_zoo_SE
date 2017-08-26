@@ -49,6 +49,7 @@ class Configuration():
             cf.savepath = os.path.join(cf.savepath, 'fake_training_savepath')
             cf.final_savepath = os.path.join(cf.final_savepath, 'fake_training_savepath')
 
+        ## from now on, cf.savepath is fake if we are predicting (and/or testing?)
 
         cf.log_file = os.path.join(cf.savepath, "logfile.log")
         if not os.path.exists(cf.savepath):
@@ -57,8 +58,7 @@ class Configuration():
 
         ## Create output folders for the weights for SE callback (if enabled)
         if cf.SE_enabled:
-            cf.savepath_SE_weights = os.path.join(experiments_path, cf.dataset_name,
-                                                  cf.exp_name, 'SE_weights')
+            cf.savepath_SE_weights = os.path.join(cf.savepath, 'SE_weights')
             if not os.path.exists(cf.savepath_SE_weights):
                 os.makedirs(cf.savepath_SE_weights)
 
@@ -67,11 +67,9 @@ class Configuration():
         shutil.copyfile(config_path, os.path.join(cf.savepath, "config.py"))
 
 
-        ## Create folder for predictions
+        ## Create folder for prediction images
         if (cf.pred_model):
-            cf.savepath_pred = os.path.join(experiments_path,
-                                                 cf.dataset_name, cf.exp_name,
-                                                 'predictions')
+            cf.savepath_pred = os.path.join(cf.real_savepath, 'prediction_images')
             if not os.path.exists(cf.savepath_pred):
                 os.makedirs(cf.savepath_pred)
 
