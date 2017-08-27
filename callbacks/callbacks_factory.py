@@ -27,7 +27,7 @@ class Callbacks_Factory():
             print('   Save image result')
             cb += [Save_results(n_classes=cf.dataset.n_classes,
                                 void_label=cf.dataset.void_class,
-                                save_path=cf.savepath,
+                                save_path=cf.savepath_images_during_train,
                                 generator=valid_gen,
                                 epoch_length=int(math.ceil(cf.save_results_nsamples/float(cf.save_results_batch_size))),
                                 color_map=cf.dataset.color_map,

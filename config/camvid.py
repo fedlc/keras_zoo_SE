@@ -15,23 +15,27 @@ weights_file                 = 'weights.hdf5'  # Training weight file name
 
 ##
 # Parameters
+
+## To train: activate only train
+## to predict/test: activate train and predict/test
 train_model                  = True            # Train the model
-test_model                   = True           # Test the model
-pred_model                   = False           # Predict using the model
+pred_model                   = True           # Predict using the model
+test_model                   = True         # Test the model
+
 ##
 SE_pred_model                = False           # predict using models from Snapshot Ensemble
 
 ##
 # Debug
 debug                        = True            # Use only few images for debuging
-debug_images_train           = -1 #50              # N images for training in debug mode (-1 means all)
-debug_images_valid           = -1 #30              # N images for validation in debug mode (-1 means all)
-debug_images_test            = -1 #30              # N images for testing in debug mode (-1 means all)
-debug_n_epochs               = 300 #2             # N of training epochs in debug mode
+debug_images_train           = 20 #50              # N images for training in debug mode (-1 means all)
+debug_images_valid           = 10 #30              # N images for validation in debug mode (-1 means all)
+debug_images_test            = 10 #30              # N images for testing in debug mode (-1 means all)
+debug_n_epochs               = 2 #2             # N of training epochs in debug mode
 
 # Batch sizes
 batch_size_train             = 2               # Batch size during training
-batch_size_valid             = 10              # Batch size during validation
+batch_size_valid             = 1##10              # Batch size during validation
 batch_size_test              = 10              # Batch size during testing
 crop_size_train              = None # (256, 256)      # Crop size during training (Height, Width) or None
 crop_size_valid              = None            # Crop size during validation
@@ -59,7 +63,7 @@ n_epochs                     = 1000            # Number of epochs during trainin
 
 # Callback save results
 save_results_enabled         = True            # Enable the Callback
-save_results_nsamples        = 5               # Number of samples to save
+save_results_nsamples        = 5               # Number of samples to save ## ??
 save_results_batch_size      = 5               # Size of the batch
 save_results_n_legend_rows   = 1               # Number of rows when showwing the legend
 
@@ -74,8 +78,8 @@ earlyStopping_verbose        = 0               # Verbosity of the early stopping
 checkpoint_enabled           = True            # Enable the Callback
 checkpoint_monitor           = 'val_jaccard'   # Metric to monitor
 checkpoint_mode              = 'max'           # Mode ['max' | 'min']
-##change to last?
-checkpoint_save_best_only    = True            # Save best or last model
+##change to last
+checkpoint_save_best_only    = False            # Save best or last model
 checkpoint_save_weights_only = True            # Save only weights or also model
 checkpoint_verbose           = 0               # Verbosity of the checkpoint
 
@@ -94,7 +98,7 @@ LRScheduler_power            = 0.9              # Power for te poly method
 
 ##
 # Callback Snapshot Ensemble
-SE_enabled                   = True             # Enable the callbacks (both: learning rate schedule and snapshot model weights saving)
+SE_enabled                   = False             # Enable the callbacks (both: learning rate schedule and snapshot model weights saving)
 SE_n_models                  = 5                # Number of snapshot models
 
 # Callback TensorBoard

@@ -119,6 +119,7 @@ def my_label2rgboverlay(labels, colors, image, bglabel=None,
 
 
 # Save 3 images (Image, mask and result)
+## actually save 4 images: img, label_mask, label_out, label_overlay
 def save_img3(image_batch, mask_batch, output, out_images_folder, epoch,
              color_map, classes, tag, void_label, n_legend_rows=1):
     # print('output shape: ' + str(output.shape))
@@ -150,7 +151,12 @@ def save_img3(image_batch, mask_batch, output, out_images_folder, epoch,
                              n_lines=n_legend_rows)
         combined_image = np.concatenate((combined_image, legend))
 
-        out_name = os.path.join(out_images_folder, tag + '_epoch' + str(epoch) + '_img' + str(j) + '.png')
+        ##
+        if (epoch == -1):
+            out_name = os.path.join(out_images_folder, tag + '_img' + str(j) + '.png')
+        else:
+            out_name = os.path.join(out_images_folder, tag + '_epoch' + str(epoch) + '_img' + str(j) + '.png')
+
         scipy.misc.toimage(combined_image).save(out_name)
         images.append(combined_image)
     return images

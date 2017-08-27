@@ -44,6 +44,18 @@ def process(configuration):
     cb = Callbacks_Factory().make(cf, valid_gen)
 
     try:
+        import math
+        print('\n')
+        print('n_images_train')
+        print(cf.dataset.n_images_train)
+        print('\n')
+        print('batch_size_test')
+        print(float(cf.batch_size_test))
+        print('\n')
+        print('\nratio')
+        print(int(math.ceil(cf.dataset.n_images_train/float(cf.batch_size_test))))
+        print('\n')
+
         if cf.train_model:
             # Train the model
             start_train = time.time()
@@ -56,17 +68,11 @@ def process(configuration):
                 raise ValueError('Unknown data format')
             print ('	Training time: ' + str(time.time()-start_train))
 
-        if cf.test_model:
-            # Compute validation metrics
-            model.test(valid_gen)
-            # Compute test metrics
-            model.test(test_gen)
-
         if cf.pred_model:
             # Compute validation metrics
             model.predict(valid_gen, tag='pred')
             # Compute test metrics
-            model.predict(test_gen, tag='pred')
+            #model.predict(test_gen, tag='pred')
 
         if cf.SE_pred_model:
             # Compute validation metrics
@@ -74,6 +80,12 @@ def process(configuration):
             # Compute test metrics
             model.SE_predict(test_gen, tag='pred')
 
+
+        if cf.test_model:
+            # Compute validation metrics
+            model.test(valid_gen)
+            # Compute test metrics
+            #model.test(test_gen)
 
     except KeyboardInterrupt:
         # In case of early stopping, transfer the local files

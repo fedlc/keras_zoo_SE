@@ -58,6 +58,7 @@ def progbar_on_epoch_end(self, epoch, logs={}):
 
 
 # Plot history
+## save plot1.png
 class History_plot(Callback):
 
     # Constructor
@@ -124,7 +125,10 @@ class Jacc_new(Callback):
         setattr(ProgbarLogger, 'on_batch_end', progbar_on_batch_end)
         setattr(ProgbarLogger, 'on_epoch_end', progbar_on_epoch_end)
 
+    ## computes the values of the metrics (printed during training, after every batch)
+    ## computes only on train data
     def on_batch_end(self, batch, logs={}):
+        ## logs is a dictionary (contains metrics).See keras documentation
         for i in range(self.n_classes):
             self.I[i] = logs['I'+str(i)]
             self.U[i] = logs['U'+str(i)]
@@ -134,7 +138,10 @@ class Jacc_new(Callback):
         self.jacc = np.nanmean(self.jacc_percl)
         logs['jaccard'] = self.jacc
 
+    ## same, but computes metrics to print at the epoch end
+    ## computes on train and validation data
     def on_epoch_end(self, epoch, logs={}):
+        ## on train data
         for i in range(self.n_classes):
             self.I[i] = logs['I'+str(i)]
             self.U[i] = logs['U'+str(i)]
@@ -143,6 +150,7 @@ class Jacc_new(Callback):
         self.jacc = np.nanmean(self.jacc_percl)
         logs['jaccard'] = self.jacc
 
+        ## on validation data
         for i in range(self.n_classes):
             self.val_I[i] = logs['val_I'+str(i)]
             self.val_U[i] = logs['val_U'+str(i)]
@@ -170,9 +178,18 @@ class Save_results(Callback):
         self.nb_worker = nb_worker
         self.max_q_size = max_q_size
 
-    def on_epoch_end(self, epoch, logs={}):
+        ##nb: we have changed save_path in callbacks_factory.py
 
+        ##
+        # nb_worker=5
+        # max_q_size=10
+        # generator = valid_gen
+
+
+    def on_epoch_end(self, epoch, logs={}):
         # Create a data generator
+        ## The task of an Enqueuer is to use parallelism to speed up preprocessing.
+        ## This is done with processes or threads.
         enqueuer = GeneratorEnqueuer(self.generator, pickle_safe=True)
         enqueuer.start(nb_worker=self.nb_worker, max_q_size=self.max_q_size,
                        wait_time=0.05)
@@ -212,7 +229,8 @@ class Save_results(Callback):
         if enqueuer is not None:
             enqueuer.stop()
 
-##
+
+## added SE tools
 class Scheduler():
     """ Learning rate scheduler function
     # Arguments

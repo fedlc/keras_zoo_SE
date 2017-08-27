@@ -8,6 +8,8 @@ from tools.save_images import save_img3
 from keras import backend as K
 # from tools.yolo_utils import *
 
+##
+import h5py
 
 # Keras dim orders
 def channel_idx():
@@ -120,26 +122,171 @@ class One_Net_Model(Model):
     def predict(self, test_gen, tag='pred'):
         if self.cf.pred_model:
             print('\n > Predicting the model...')
+
+            print("test_gen")
+            print(test_gen)
+
+            ## create hdf5 file to save the predictions, to use them when testing
+            y_pred_file = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", "w")
+            y_pred_dset = y_pred_file.create_dataset("y_pred_dataset", (10,360,480), dtype='i8')
+            ## ACHTUNG: for SE, it will have to be dtype='f32'
+
+            ## ----- LOAD MODEL WEIGHTS -----
+
+            # Load best trained model (or last? see camvid.py)
+            weights_fl = os.path.join(self.cf.real_savepath, "weights.hdf5")
+            self.model.load_weights(weights_fl)
+
+            ## ----- LOAD x_true AND y_true FROM enqueuer -----
+
+            ## same values from Save_results callback (?)
+            nb_worker = 5
+            max_q_size = 10
+
+            # Process the dataset
+            for _ in range(1):
+
+                enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
+                print("\nenqueuer")
+                print(enqueuer)
+                enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
+                               wait_time=0.05)
+
+                # Get data for this minibatch
+                data = None
+
+                print("enqueuer.is_running()")
+                print(enqueuer.is_running())
+
+                while enqueuer.is_running():
+                    if not enqueuer.queue.empty():
+                        print('inside')
+                        data = enqueuer.queue.get()
+                        break
+                    else:
+                        time.sleep(0.05)
+
+                x_true = data[0]
+                print('\nx_true')
+                print(type(x_true))
+                print(x_true.shape)
+
+                y_true = data[1].astype('int32')
+                print('\ny_true')
+                print(type(y_true))
+                print(y_true.shape)
+
+                ## ----- MAKE PREDICTIONS -----
+
+                # Get prediction for this minibatch
+                ## this predict is from keras since model is a Keras Model
+                y_pred = self.model.predict(x_true)
+                print('\ny_pred')
+                print(type(y_pred))
+                print(y_pred.shape)
+                print(y_pred.dtype)
+                print(y_pred)
+
+
+
+                """
+                print('data')
+                print(type(data))
+                print(len(data[0]))
+                #data = np.array(data)
+                print(type(data))
+                print(data.shape)
+                """
+
+                ## both x_true and y_true contain batch_size_valid images ("valid" if test_gen==valid_gen)
+                ## x_true is a numpy.ndarray with shape (10, 360, 480, 3)
+                ## y_true is a numpy.ndarray with shape (10, 360, 480, 1)
+                ## y_pred is a numpy.ndarray with shape (10, 360, 480, 11)
+
+
+
+
+                """
+
+                fff = open( 'y_pred_ep' + str(epoch) + '.py', 'w' )
+
+                for aaa in range(y_pred.shape[0]):
+                    for bbb in range(y_pred.shape[1]):
+                        for ccc in range(y_pred.shape[2]):
+                            for ddd in range(y_pred.shape[3]):
+                                eee = y_pred[aaa][bbb][ccc][ddd]
+                                if (eee > 0 and eee < 1):
+                                    print>>fff, eee
+
+                fff.close()
+                """
+
+
+                # Reshape y_true and compute the y_pred argmax
+                if K.image_dim_ordering() == 'th':
+                    y_pred = np.argmax(y_pred, axis=1)
+                    y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[2],
+                                                 y_true.shape[3]))
+                else:
+                    y_pred = np.argmax(y_pred, axis=3)
+                    y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[1],
+                                                 y_true.shape[2]))
+
+                print('\ny_pred after argmax')
+                print(type(y_pred))
+                print(y_pred.shape)
+                print(y_pred)
+
+                ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
+
+                ##y_pred_dset[0:10] = y_pred
+                y_pred_dset[0] = y_pred
+                ##
+                print('\ny_pred_dset')
+                print(type(y_pred_dset))
+                print(y_pred_dset.shape)
+                print(y_pred_dset[0])
+
+                ## ----- SAVE PREDICTIONS AS IMAGES -----
+
+                # Save output images
+                ##
+                save_img3(image_batch=x_true, mask_batch=y_true, output=y_pred,
+                          out_images_folder=self.cf.savepath_pred, epoch=-1,
+                          color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
+                          tag=tag+str(_), void_label=self.cf.dataset.void_class, n_legend_rows=1)
+                ##
+                ##if (_ < 1):
+                ##    test_gen.next()
+
+            ## ----- CLOSE RUNNING STUFF -----
+            # Stop data generator
+            if enqueuer is not None:
+                enqueuer.stop()
+
+            ## close h5py file (and save it)
+            y_pred_file.close()
+
+
+
+    """
+    OLD VERSION OF predict
+    # Predict the model
+    def predict(self, test_gen, tag='pred'):
+        if self.cf.pred_model:
+            print('\n > Predicting the model...')
             # Load best trained model
             self.model.load_weights(self.cf.weights_file)
 
             # Create a data generator
             data_gen_queue, _stop, _generator_threads = GeneratorEnqueuer(self.test_gen, max_q_size=cf.max_q_size)
-            ##data_gen_queue = GeneratorEnqueuer(test_gen, pickle_safe=True)
 
             # Process the dataset
             start_time = time.time()
             for _ in range(int(math.ceil(self.cf.dataset.n_images_train/float(self.cf.batch_size_test)))):
 
-                ##added:
-                ##data = None
-
                 # Get data for this minibatch
                 data = data_gen_queue.get()
-
-                ##added:
-                ##data = data_gen_queue.queue.get()
-
                 x_true = data[0]
                 y_true = data[1].astype('int32')
 
@@ -160,29 +307,82 @@ class One_Net_Model(Model):
             # Stop data generator
             _stop.set()
 
-            ##added
-            ##data_gen_queue.stop()
-
             total_time = time.time() - start_time
             fps = float(self.cf.dataset.n_images_test) / total_time
             s_p_f = total_time / float(self.cf.dataset.n_images_test)
             print ('   Predicting time: {}. FPS: {}. Seconds per Frame: {}'.format(total_time, fps, s_p_f))
 
 
-    ##
-    def SE_predict(self, test_gen, tag='pred'):
-        if self.cf.SE_pred_model:
-            print('\n > Snapshot Ensembling, predicting using models from the ensemble0...')
-            # Load models
-            self.model.load_weights(self.cf.weights_file)
-            model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
-            print(model_list)
-            print('AAAAAAAAAAAA')
-
-
+    """
 
     # Test the model
     def test(self, test_gen):
+        if self.cf.test_model:
+            print('\n > Testing the model...')
+
+            ## ----- LOAD y_true FROM enqueuer -----
+            ## same values from Save_results callback (?)
+            nb_worker = 5
+            max_q_size = 10
+
+            enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
+            print("\nenqueuer")
+            print(enqueuer)
+            enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
+                           wait_time=0.05)
+
+            # Get data for this minibatch
+            data = None
+
+            print("enqueuer.is_running()")
+            print(enqueuer.is_running())
+
+            while enqueuer.is_running():
+                if not enqueuer.queue.empty():
+                    print('inside: enqueuer running and not empty')
+                    data = enqueuer.queue.get()
+                    break
+                else:
+                    time.sleep(0.05)
+
+            y_true = data[1].astype('int32')
+            print('\ny_true')
+            print(type(y_true))
+            print(y_true.shape)
+            print(y_true)
+
+            y_true_resized = np.squeeze(y_true)
+            print('\ny_true_resized')
+            print(type(y_true_resized))
+            print(y_true_resized.shape)
+            print(y_true_resized)
+
+            ## ----- LOAD y_pred -----
+
+            y_pred_file = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", 'r')
+            y_pred_dset = y_pred_file['.']['y_pred_dataset'].value
+
+            print('\ny_pred_dset')
+            print(type(y_pred_dset))
+            print('y_pred_dset.shape')
+            print(y_pred_dset.shape)
+            print("y_pred_dset[0].shape")
+            print(y_pred_dset[0].shape)
+            print(y_pred_dset[0])
+
+            y_pred_file.close()
+
+            ## ----- COMPUTE ACCURACY -----
+
+
+
+
+
+
+
+
+        """
+        OLD VERSION
         if self.cf.test_model:
             print('\n > Testing the model...')
             # Load best trained model
@@ -229,3 +429,25 @@ class One_Net_Model(Model):
                 # Compute jaccard mean
                 jacc_mean = np.nanmean(jacc_percl)
                 print ('   Jaccard mean: {}'.format(jacc_mean))
+
+            """
+
+
+
+
+    ##
+    def SE_predict(self, test_gen, tag='SE_pred'):
+        if self.cf.SE_pred_model:
+            print('\n > Snapshot Ensembling, predicting using models from the ensemble0...')
+            # Load models
+            #self.model.load_weights(self.cf.weights_file)
+            #model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
+            #print(model_list)
+            #print('AAAAAAAAAAAA')
+
+
+
+            # ------------------------------------------
+            # Create a data generator
+            ## The task of an Enqueuer is to use parallelism to speed up preprocessing.
+            ## This is done with processes or threads.
