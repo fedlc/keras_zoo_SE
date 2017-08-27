@@ -178,6 +178,8 @@ class Save_results(Callback):
         self.nb_worker = nb_worker
         self.max_q_size = max_q_size
 
+        ##nb: we have changed save_path in callbacks_factory.py
+
         ##
         # nb_worker=5
         # max_q_size=10
@@ -209,35 +211,6 @@ class Save_results(Callback):
             # Get prediction for this minibatch
             y_pred = self.model.predict(x_true)
 
-            ##
-            """
-            print('\n\n')
-            print('y_pred.shape[0]')
-            print (y_pred.shape[0])
-            print('y_pred.shape[1]')
-            print (y_pred.shape[1])
-            print('y_pred.shape[2]')
-            print (y_pred.shape[2])
-            print('y_pred.shape[3]')
-            print (y_pred.shape[3])
-
-            print('\n\n')
-
-            fff = open( 'y_pred_ep' + str(epoch) + '.py', 'w' )
-
-            for aaa in range(y_pred.shape[0]):
-                for bbb in range(y_pred.shape[1]):
-                    for ccc in range(y_pred.shape[2]):
-                        for ddd in range(y_pred.shape[3]):
-                            eee = y_pred[aaa][bbb][ccc][ddd]
-                            if (eee > 0 and eee < 1):
-                                print>>fff, eee
-                        #fff.write(eee + '\n')
-
-            #fff.write( repr(*y_pred) + '\n' )
-            fff.close()
-            """
-
             # Reshape y_true and compute the y_pred argmax
             if K.image_dim_ordering() == 'th':
                 y_pred = np.argmax(y_pred, axis=1)
@@ -256,19 +229,8 @@ class Save_results(Callback):
         if enqueuer is not None:
             enqueuer.stop()
 
-"""
-            print('\n\n')
-            print(y_pred[0][0])
-            print('y_pred.shape[0]')
-            print (y_pred.shape[0])
-            print('y_pred.shape[1]')
-            print (y_pred.shape[1])
-            print('y_pred.shape[2]')
-            print (y_pred.shape[2])
-            print('\n\n')
-"""
 
-##
+## added SE tools
 class Scheduler():
     """ Learning rate scheduler function
     # Arguments

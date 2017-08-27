@@ -68,11 +68,6 @@ def process(configuration):
                 raise ValueError('Unknown data format')
             print ('	Training time: ' + str(time.time()-start_train))
 
-        if cf.test_model:
-            # Compute validation metrics
-            model.test(valid_gen)
-            # Compute test metrics
-            model.test(test_gen)
         if cf.pred_model:
             # Compute validation metrics
             model.predict(valid_gen, tag='pred')
@@ -85,6 +80,12 @@ def process(configuration):
             # Compute test metrics
             model.SE_predict(test_gen, tag='pred')
 
+
+        if cf.test_model:
+            # Compute validation metrics
+            model.test(valid_gen)
+            # Compute test metrics
+            #model.test(test_gen)
 
     except KeyboardInterrupt:
         # In case of early stopping, transfer the local files

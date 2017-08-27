@@ -123,28 +123,31 @@ class One_Net_Model(Model):
         if self.cf.pred_model:
             print('\n > Predicting the model...')
 
-            # Load best trained model
-
+            print("test_gen")
             print(test_gen)
 
+            ## create hdf5 file to save the predictions, to use them when testing
+            y_pred_file = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", "w")
+            y_pred_dset = y_pred_file.create_dataset("y_pred_dataset", (10,360,480), dtype='i8')
+            ## ACHTUNG: for SE, it will have to be dtype='f32'
+
+            ## ----- LOAD MODEL WEIGHTS -----
+
+            # Load best trained model (or last? see camvid.py)
             weights_fl = os.path.join(self.cf.real_savepath, "weights.hdf5")
             self.model.load_weights(weights_fl)
+
+            ## ----- LOAD x_true AND y_true FROM enqueuer -----
 
             ## same values from Save_results callback (?)
             nb_worker = 5
             max_q_size = 10
 
-
             # Process the dataset
-            ##
-
-
-            f = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", "w") ## "a"
-            dset = f.create_dataset("y_pred_dataset", (10,360,480))
-
-            for _ in range(2):
+            for _ in range(1):
 
                 enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
+                print("\nenqueuer")
                 print(enqueuer)
                 enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
                                wait_time=0.05)
@@ -152,6 +155,7 @@ class One_Net_Model(Model):
                 # Get data for this minibatch
                 data = None
 
+                print("enqueuer.is_running()")
                 print(enqueuer.is_running())
 
                 while enqueuer.is_running():
@@ -163,22 +167,25 @@ class One_Net_Model(Model):
                         time.sleep(0.05)
 
                 x_true = data[0]
-                print('x_true')
+                print('\nx_true')
                 print(type(x_true))
                 print(x_true.shape)
-                print(len(x_true))
 
                 y_true = data[1].astype('int32')
-                print('y_true')
+                print('\ny_true')
                 print(type(y_true))
                 print(y_true.shape)
+
+                ## ----- MAKE PREDICTIONS -----
 
                 # Get prediction for this minibatch
                 ## this predict is from keras since model is a Keras Model
                 y_pred = self.model.predict(x_true)
-                print('y_pred')
+                print('\ny_pred')
                 print(type(y_pred))
                 print(y_pred.shape)
+                print(y_pred.dtype)
+                print(y_pred)
 
 
 
@@ -198,6 +205,23 @@ class One_Net_Model(Model):
 
 
 
+
+                """
+
+                fff = open( 'y_pred_ep' + str(epoch) + '.py', 'w' )
+
+                for aaa in range(y_pred.shape[0]):
+                    for bbb in range(y_pred.shape[1]):
+                        for ccc in range(y_pred.shape[2]):
+                            for ddd in range(y_pred.shape[3]):
+                                eee = y_pred[aaa][bbb][ccc][ddd]
+                                if (eee > 0 and eee < 1):
+                                    print>>fff, eee
+
+                fff.close()
+                """
+
+
                 # Reshape y_true and compute the y_pred argmax
                 if K.image_dim_ordering() == 'th':
                     y_pred = np.argmax(y_pred, axis=1)
@@ -208,17 +232,22 @@ class One_Net_Model(Model):
                     y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[1],
                                                  y_true.shape[2]))
 
-                print('y_pred_argmax')
+                print('\ny_pred after argmax')
                 print(type(y_pred))
                 print(y_pred.shape)
+                print(y_pred)
 
+                ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
 
-                dset[0:10] = y_pred
+                ##y_pred_dset[0:10] = y_pred
+                y_pred_dset[0] = y_pred
                 ##
-                print('dset')
-                print(type(dset))
-                print(dset.shape)
+                print('\ny_pred_dset')
+                print(type(y_pred_dset))
+                print(y_pred_dset.shape)
+                print(y_pred_dset[0])
 
+                ## ----- SAVE PREDICTIONS AS IMAGES -----
 
                 # Save output images
                 ##
@@ -226,16 +255,17 @@ class One_Net_Model(Model):
                           out_images_folder=self.cf.savepath_pred, epoch=-1,
                           color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
                           tag=tag+str(_), void_label=self.cf.dataset.void_class, n_legend_rows=1)
+                ##
+                ##if (_ < 1):
+                ##    test_gen.next()
 
-                if (_ < 1):
-                    test_gen.next()
-
+            ## ----- CLOSE RUNNING STUFF -----
             # Stop data generator
             if enqueuer is not None:
                 enqueuer.stop()
 
-            ## close h5py file
-            f.close()
+            ## close h5py file (and save it)
+            y_pred_file.close()
 
 
 
@@ -285,53 +315,74 @@ class One_Net_Model(Model):
 
     """
 
-    ##
-    def SE_predict(self, test_gen, tag='SE_pred'):
-        if self.cf.SE_pred_model:
-            print('\n > Snapshot Ensembling, predicting using models from the ensemble0...')
-            # Load models
-            #self.model.load_weights(self.cf.weights_file)
-            #model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
-            #print(model_list)
-            #print('AAAAAAAAAAAA')
-
-
-
-            # ------------------------------------------
-            # Create a data generator
-            ## The task of an Enqueuer is to use parallelism to speed up preprocessing.
-            ## This is done with processes or threads.
-
-
-
-
-
-            # ------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     # Test the model
     def test(self, test_gen):
         if self.cf.test_model:
-            pass
+            print('\n > Testing the model...')
+
+            ## ----- LOAD y_true FROM enqueuer -----
+            ## same values from Save_results callback (?)
+            nb_worker = 5
+            max_q_size = 10
+
+            enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
+            print("\nenqueuer")
+            print(enqueuer)
+            enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
+                           wait_time=0.05)
+
+            # Get data for this minibatch
+            data = None
+
+            print("enqueuer.is_running()")
+            print(enqueuer.is_running())
+
+            while enqueuer.is_running():
+                if not enqueuer.queue.empty():
+                    print('inside: enqueuer running and not empty')
+                    data = enqueuer.queue.get()
+                    break
+                else:
+                    time.sleep(0.05)
+
+            y_true = data[1].astype('int32')
+            print('\ny_true')
+            print(type(y_true))
+            print(y_true.shape)
+            print(y_true)
+
+            y_true_resized = np.squeeze(y_true)
+            print('\ny_true_resized')
+            print(type(y_true_resized))
+            print(y_true_resized.shape)
+            print(y_true_resized)
+
+            ## ----- LOAD y_pred -----
+
+            y_pred_file = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", 'r')
+            y_pred_dset = y_pred_file['.']['y_pred_dataset'].value
+
+            print('\ny_pred_dset')
+            print(type(y_pred_dset))
+            print('y_pred_dset.shape')
+            print(y_pred_dset.shape)
+            print("y_pred_dset[0].shape")
+            print(y_pred_dset[0].shape)
+            print(y_pred_dset[0])
+
+            y_pred_file.close()
+
+            ## ----- COMPUTE ACCURACY -----
+
+
+
+
 
 
 
 
         """
-        OLD TEST
+        OLD VERSION
         if self.cf.test_model:
             print('\n > Testing the model...')
             # Load best trained model
@@ -379,4 +430,24 @@ class One_Net_Model(Model):
                 jacc_mean = np.nanmean(jacc_percl)
                 print ('   Jaccard mean: {}'.format(jacc_mean))
 
-        """
+            """
+
+
+
+
+    ##
+    def SE_predict(self, test_gen, tag='SE_pred'):
+        if self.cf.SE_pred_model:
+            print('\n > Snapshot Ensembling, predicting using models from the ensemble0...')
+            # Load models
+            #self.model.load_weights(self.cf.weights_file)
+            #model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
+            #print(model_list)
+            #print('AAAAAAAAAAAA')
+
+
+
+            # ------------------------------------------
+            # Create a data generator
+            ## The task of an Enqueuer is to use parallelism to speed up preprocessing.
+            ## This is done with processes or threads.

@@ -41,20 +41,30 @@ class Configuration():
                                          cf.exp_name)
 
 
-        ## Modify savepath if we are training just to make predict work
+
+        ## Modify savepath if we are training just to make enqueuer work (in predict)
         ## add also test_model case?
         ## (it is provisional, see notes)
-        if (cf.SE_pred_model or cf.pred_model):
+        ## if (cf.SE_pred_model or cf.pred_model):
+        if (os.path.exists(cf.savepath)):
             cf.real_savepath = cf.savepath
             cf.savepath = os.path.join(cf.savepath, 'fake_training_savepath')
             cf.final_savepath = os.path.join(cf.final_savepath, 'fake_training_savepath')
 
-        ## from now on, cf.savepath is fake if we are predicting (and/or testing?)
+        ## from now on, cf.savepath is fake if we are predicting (and/or testing?),
+        ## i.e. if we are traininng just to make enqueuer work (in predict)
 
         cf.log_file = os.path.join(cf.savepath, "logfile.log")
+
         if not os.path.exists(cf.savepath):
             os.makedirs(cf.savepath)
         cf.usr_path = self.usr_path
+
+
+        ## Create output folder for the images saved during training
+        cf.savepath_images_during_train = os.path.join(cf.savepath, 'images_during_training')
+        if not os.path.exists(cf.savepath_images_during_train):
+            os.makedirs(cf.savepath_images_during_train)
 
         ## Create output folders for the weights for SE callback (if enabled)
         if cf.SE_enabled:
