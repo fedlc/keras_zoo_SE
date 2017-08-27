@@ -357,7 +357,7 @@ class One_Net_Model(Model):
             print(y_true_resized.shape)
             print(y_true_resized)
 
-            ## ----- LOAD y_pred -----
+            ## ----- LOAD y_pred from the hdf5 file -----
 
             y_pred_file = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", 'r')
             y_pred_dset = y_pred_file['.']['y_pred_dataset'].value
@@ -372,12 +372,24 @@ class One_Net_Model(Model):
 
             y_pred_file.close()
 
+            y_pred = y_pred_dset[0]
+
+
             ## ----- COMPUTE ACCURACY -----
 
 
+            from sklearn.metrics import jaccard_similarity_score
+            from sklearn.metrics import accuracy_score
+            from sklearn.metrics import confusion_matrix
 
+            acc = accuracy_score(y_true.flatten(), y_pred.flatten(), normalize=True)
+            jac = jaccard_similarity_score(y_true.flatten(), y_pred.flatten(), normalize=True)
+            confusion_matrix = confusion_matrix(y_true.flatten(), y_pred.flatten())
 
-
+            print('\n\n\n')
+            print(acc)
+            print(jac)
+            print(confusion_matrix)
 
 
 
