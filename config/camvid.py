@@ -18,7 +18,7 @@ weights_file                 = 'weights.hdf5'  # Training weight file name
 
 ## To train: activate only train
 ## to predict/test: activate train and predict/test
-train_model                  = True            # Train the model
+train_model                  = False            # Train the model
 pred_model                   = True           # Predict using the model
 test_model                   = False         # Test the model
 

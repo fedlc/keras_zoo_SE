@@ -151,8 +151,38 @@ class Dataset_Generators():
                                                  batch_size=cf.batch_size_test,
                                                  shuffle=cf.shuffle_test,
                                                  seed=cf.seed_test)
+            ##
+            if valid_gen == None:
+                # Load validation set
+                print ('\n > Reading validation set...')
+                dg_va = ImageDataGenerator(imageNet=cf.norm_imageNet_preprocess,
+                                           rgb_mean=mean,
+                                           rgb_std=std,
+                                           rescale=cf.norm_rescale,
+                                           featurewise_center=cf.norm_featurewise_center,
+                                           featurewise_std_normalization=cf.norm_featurewise_std_normalization,
+                                           samplewise_center=cf.norm_samplewise_center,
+                                           samplewise_std_normalization=cf.norm_samplewise_std_normalization,
+                                           gcn=cf.norm_gcn,
+                                           zca_whitening=cf.norm_zca_whitening,
+                                           crop_size=cf.crop_size_valid,
+                                           dim_ordering='th' if 'yolo' in cf.model_name else 'default',
+                                           class_mode=cf.dataset.class_mode)
+                valid_gen = dg_va.flow_from_directory(directory=cf.dataset.path_valid_img,
+                                                      gt_directory=cf.dataset.path_valid_mask,
+                                                      resize=cf.resize_valid,
+                                                      target_size=cf.target_size_valid,
+                                                      color_mode=cf.dataset.color_mode,
+                                                      classes=cf.dataset.classes,
+                                                      class_mode=cf.dataset.class_mode,
+                                                      batch_size=cf.batch_size_valid,
+                                                      shuffle=cf.shuffle_valid,
+                                                      seed=cf.seed_valid)
 
         else:
             test_gen = None
+
+
+
 
         return (train_gen, valid_gen, test_gen)

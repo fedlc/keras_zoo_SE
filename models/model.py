@@ -144,11 +144,113 @@ class One_Net_Model(Model):
             weights_fl = os.path.join(self.cf.real_savepath, "weights.hdf5")
             self.model.load_weights(weights_fl)
 
-            ## ----- LOAD x_true AND y_true FROM enqueuer -----
+            # change 100
+            y_pred = self.model.predict_generator(test_gen, val_samples=101,
+                                max_q_size=10,
+                              nb_worker=1, pickle_safe=False)
+            print('\ny_pred')
+            print(type(y_pred))
+            print(y_pred.shape)
+            print(y_pred.dtype)
+            #print(y_pred)
 
-            ## same values from Save_results callback (?)
-            nb_worker = 5
-            max_q_size = 10
+
+            ## WE NEED y_true
+            import skimage.io as io
+            # change 100
+            y_true = np.array(io.ImageCollection(self.cf.dataset.path_valid_mask + '/*'))[0:101]
+            print('y_true')
+            print(len(y_true))
+            print(type(y_true))
+            print(y_true.shape)
+            print(y_true.dtype)
+
+            # change 100
+            #x_true = np.array(io.ImageCollection(self.cf.dataset.path_valid_img + '/*'))[0:101]
+            x_true = io.ImageCollection(self.cf.dataset.path_valid_img + '/*')[0:101]
+            """
+            print('x_true')
+            print(len(x_true))
+            print(type(x_true))
+            print(x_true.shape)
+            print(x_true.dtype)
+            """
+
+
+
+            # Reshape y_true and compute the y_pred argmax
+            if K.image_dim_ordering() == 'th':
+                y_pred = np.argmax(y_pred, axis=1)
+                y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[2],
+                                             y_true.shape[3]))
+            else:
+                y_pred = np.argmax(y_pred, axis=3)
+                y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[1],
+                                             y_true.shape[2]))
+
+            print('\ny_pred after argmax')
+            print(type(y_pred))
+            print(y_pred.shape)
+            #print(y_pred)
+
+            print('\ny_true after argmax')
+            print(type(y_true))
+            print(y_true.shape)
+            #print(y_pred)
+
+            ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
+
+            ##y_pred_dset[0:9] = y_pred
+
+            #y_pred_dset[_*batch_size : (_*batch_size+len(y_pred))] = y_pred
+            y_pred_dset = y_pred
+
+
+            ##
+            print('\ny_pred_dset')
+            print(type(y_pred_dset))
+            print(y_pred_dset.shape)
+            print(y_pred_dset.dtype)
+
+            ## ----- SAVE PREDICTIONS AS IMAGES -----
+            print('Saving prediction images..')
+            # Save output images
+            save_img3(image_batch=x_true, mask_batch=y_true, output=y_pred,
+                      out_images_folder=self.cf.savepath_pred, epoch=-1,
+                      color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
+                      tag=tag, void_label=self.cf.dataset.void_class, n_legend_rows=1,
+                      tag2='prediction_images')
+
+            ## ----- CLOSE RUNNING STUFF -----
+            ## close h5py file (and save it)
+            y_pred_file.close()
+
+
+
+
+
+            """
+            Old version :(
+
+            print("test_gen")
+            print(test_gen)
+
+            ## ----- CREATE hdf5 FILE TO SAVE y_pred  -----
+
+            ## get number of images in dataset
+            nb_sample = len(test_gen.filenames[:])
+
+            ## create hdf5 file to save the predictions, to use them when testing
+            y_pred_file = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", "w")
+            y_pred_dset = y_pred_file.create_dataset("y_pred_dataset", (nb_sample,360,480), dtype='i8')
+            ## ACHTUNG: for SE, it will have to be dtype='f32'
+
+            ## ----- LOAD MODEL WEIGHTS -----
+
+            # Load best trained model (or last? see camvid.py)
+            weights_fl = os.path.join(self.cf.real_savepath, "weights.hdf5")
+            self.model.load_weights(weights_fl)
+
 
             #y_pred_prova = self.model.predict_generator(test_gen, val_samples=100,
             #                    max_q_size=10,
@@ -160,6 +262,15 @@ class One_Net_Model(Model):
             #print(y_pred_prova)
 
             #quit()
+
+
+
+            ## ----- LOAD x_true AND y_true FROM enqueuer -----
+
+            ## same values from Save_results callback (?)
+            nb_worker = 5
+            max_q_size = 10
+
             ## batch size
             if (tag_gen == 'valid_gen'):
                 batch_size = self.cf.batch_size_valid
@@ -218,15 +329,6 @@ class One_Net_Model(Model):
 
 
 
-                """
-                print('data')
-                print(type(data))
-                print(len(data[0]))
-                #data = np.array(data)
-                print(type(data))
-                print(data.shape)
-                """
-
                 ## both x_true and y_true contain batch_size_valid images ("valid" if test_gen==valid_gen)
                 ## x_true is a numpy.ndarray with shape (10, 360, 480, 3)
                 ## y_true is a numpy.ndarray with shape (10, 360, 480, 1)
@@ -235,7 +337,6 @@ class One_Net_Model(Model):
 
 
 
-                """
 
                 fff = open( 'y_pred_ep' + str(epoch) + '.py', 'w' )
 
@@ -248,8 +349,6 @@ class One_Net_Model(Model):
                                     print>>fff, eee
 
                 fff.close()
-                """
-
 
                 # Reshape y_true and compute the y_pred argmax
                 if K.image_dim_ordering() == 'th':
@@ -297,6 +396,7 @@ class One_Net_Model(Model):
             y_pred_file.close()
 
 
+            """
 
     """
     OLD VERSION OF predict

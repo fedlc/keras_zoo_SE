@@ -121,7 +121,7 @@ def my_label2rgboverlay(labels, colors, image, bglabel=None,
 # Save 3 images (Image, mask and result)
 ## actually save 4 images: img, label_mask, label_out, label_overlay
 def save_img3(image_batch, mask_batch, output, out_images_folder, epoch,
-             color_map, classes, tag, void_label, n_legend_rows=1):
+             color_map, classes, tag, void_label, n_legend_rows=1, tag2=''):
     # print('output shape: ' + str(output.shape))
     # print('Mask shape: ' + str(mask_batch.shape))
     output[(mask_batch == void_label).nonzero()] = void_label
@@ -132,7 +132,10 @@ def save_img3(image_batch, mask_batch, output, out_images_folder, epoch,
             img = img.transpose((1, 2, 0))
 
         #img = norm_01(img, mask_batch[j], void_label)*255
-        img = norm_01(img, mask_batch[j], -1)*255
+        if (tag2 == 'prediction_images'):
+            pass
+        else:
+            img = norm_01(img, mask_batch[j], -1)*255
 
         #img = image_batch[j].transpose((1, 2, 0))
         label_out = my_label2rgb(output[j], bglabel=void_label,
@@ -152,7 +155,7 @@ def save_img3(image_batch, mask_batch, output, out_images_folder, epoch,
         combined_image = np.concatenate((combined_image, legend))
 
         ##
-        if (epoch == -1):
+        if (tag2 == 'prediction_images'):
             out_name = os.path.join(out_images_folder, tag + '_img' + str(j) + '.png')
         else:
             out_name = os.path.join(out_images_folder, tag + '_epoch' + str(epoch) + '_img' + str(j) + '.png')
