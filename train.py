@@ -70,22 +70,22 @@ def process(configuration):
 
         if cf.pred_model:
             # Compute validation metrics
-            model.predict(valid_gen, tag='pred')
+            model.predict(valid_gen, tag='pred', tag_gen='valid_gen')
             # Compute test metrics
-            #model.predict(test_gen, tag='pred')
+            #model.predict(test_gen, tag='pred', tag_gen='test_gen')
 
         if cf.SE_pred_model:
             # Compute validation metrics
-            model.SE_predict(valid_gen, tag='pred')
+            model.SE_predict(valid_gen, tag='pred', tag_gen='valid_gen')
             # Compute test metrics
-            model.SE_predict(test_gen, tag='pred')
+            model.SE_predict(test_gen, tag='pred', tag_gen='test_gen')
 
 
         if cf.test_model:
             # Compute validation metrics
-            model.test(valid_gen)
+            model.test(valid_gen, tag_gen='valid_gen')
             # Compute test metrics
-            #model.test(test_gen)
+            #model.test(test_gen, tag_gen='test_gen')
 
     except KeyboardInterrupt:
         # In case of early stopping, transfer the local files

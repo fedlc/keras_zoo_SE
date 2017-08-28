@@ -38,6 +38,8 @@ class Model():
         pass
 
 
+
+
 # TODO: Better call it Regular_Model ?
 class One_Net_Model(Model):
     """
@@ -119,16 +121,21 @@ class One_Net_Model(Model):
 
     ##
     # Predict the model
-    def predict(self, test_gen, tag='pred'):
+    def predict(self, test_gen, tag='pred', tag_gen=''):
         if self.cf.pred_model:
             print('\n > Predicting the model...')
 
             print("test_gen")
             print(test_gen)
 
+            ## ----- CREATE hdf5 FILE TO SAVE y_pred  -----
+
+            ## get number of images in dataset
+            nb_sample = len(test_gen.filenames[:])
+
             ## create hdf5 file to save the predictions, to use them when testing
             y_pred_file = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", "w")
-            y_pred_dset = y_pred_file.create_dataset("y_pred_dataset", (10,360,480), dtype='i8')
+            y_pred_dset = y_pred_file.create_dataset("y_pred_dataset", (nb_sample,360,480), dtype='i8')
             ## ACHTUNG: for SE, it will have to be dtype='f32'
 
             ## ----- LOAD MODEL WEIGHTS -----
@@ -143,8 +150,29 @@ class One_Net_Model(Model):
             nb_worker = 5
             max_q_size = 10
 
+            #y_pred_prova = self.model.predict_generator(test_gen, val_samples=100,
+            #                    max_q_size=10,
+            #                  nb_worker=5, pickle_safe=True)
+            print('\ny_pred_prova')
+            print(type(y_pred_prova))
+            print(y_pred_prova.shape)
+            print(y_pred_prova.dtype)
+            #print(y_pred_prova)
+
+            #quit()
+            ## batch size
+            if (tag_gen == 'valid_gen'):
+                batch_size = self.cf.batch_size_valid
+            elif (tag_gen == 'test_gen'):
+                batch_size = self.cf.batch_size_test
+            else:
+                raise ValueError('Unknown data generator tag')
+
             # Process the dataset
-            for _ in range(1):
+            nb_iterations = int(math.ceil(nb_sample/float(batch_size)))
+            for _ in range(nb_iterations):
+
+                print("\n\nIteration " + str(_+1) + '/' + str(nb_iterations))
 
                 enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
                 print("\nenqueuer")
@@ -170,6 +198,7 @@ class One_Net_Model(Model):
                 print('\nx_true')
                 print(type(x_true))
                 print(x_true.shape)
+                #print(x_true)
 
                 y_true = data[1].astype('int32')
                 print('\ny_true')
@@ -239,13 +268,13 @@ class One_Net_Model(Model):
 
                 ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
 
-                ##y_pred_dset[0:10] = y_pred
-                y_pred_dset[0] = y_pred
+                ##y_pred_dset[0:9] = y_pred
+
+                y_pred_dset[_*batch_size : (_*batch_size+len(y_pred))] = y_pred
                 ##
                 print('\ny_pred_dset')
                 print(type(y_pred_dset))
                 print(y_pred_dset.shape)
-                print(y_pred_dset[0])
 
                 ## ----- SAVE PREDICTIONS AS IMAGES -----
 
@@ -255,9 +284,9 @@ class One_Net_Model(Model):
                           out_images_folder=self.cf.savepath_pred, epoch=-1,
                           color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
                           tag=tag+str(_), void_label=self.cf.dataset.void_class, n_legend_rows=1)
-                ##
-                ##if (_ < 1):
-                ##    test_gen.next()
+
+                if (_ < nb_iterations-2):
+                    test_gen.next()
 
             ## ----- CLOSE RUNNING STUFF -----
             # Stop data generator
@@ -316,7 +345,7 @@ class One_Net_Model(Model):
     """
 
     # Test the model
-    def test(self, test_gen):
+    def test(self, test_gen, tag_gen=''):
         if self.cf.test_model:
             print('\n > Testing the model...')
 
@@ -483,7 +512,7 @@ class One_Net_Model(Model):
 
 
     ##
-    def SE_predict(self, test_gen, tag='SE_pred'):
+    def SE_predict(self, test_gen, tag='SE_pred', tag_gen=''):
         if self.cf.SE_pred_model:
             print('\n > Snapshot Ensembling, predicting using models from the ensemble0...')
             # Load models
