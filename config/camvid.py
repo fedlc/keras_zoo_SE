@@ -20,7 +20,7 @@ weights_file                 = 'weights.hdf5'  # Training weight file name
 ## to predict/test: activate train and predict/test
 train_model                  = True            # Train the model
 pred_model                   = True           # Predict using the model
-test_model                   = True         # Test the model
+test_model                   = False         # Test the model
 
 ##
 SE_pred_model                = False           # predict using models from Snapshot Ensemble

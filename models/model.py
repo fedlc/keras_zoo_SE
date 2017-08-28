@@ -366,6 +366,8 @@ class One_Net_Model(Model):
             print(type(y_pred_dset))
             print('y_pred_dset.shape')
             print(y_pred_dset.shape)
+            print(y_pred_dset[0].shape)
+
             print("y_pred_dset[0].shape")
             print(y_pred_dset[0].shape)
             print(y_pred_dset[0])
@@ -378,19 +380,52 @@ class One_Net_Model(Model):
             ## ----- COMPUTE ACCURACY -----
 
 
-            from sklearn.metrics import jaccard_similarity_score
-            from sklearn.metrics import accuracy_score
+            #from sklearn.metrics import jaccard_similarity_score
+            #from sklearn.metrics import accuracy_score
             from sklearn.metrics import confusion_matrix
 
-            acc = accuracy_score(y_true.flatten(), y_pred.flatten(), normalize=True)
-            jac = jaccard_similarity_score(y_true.flatten(), y_pred.flatten(), normalize=True)
-            confusion_matrix = confusion_matrix(y_true.flatten(), y_pred.flatten())
+            #acc = accuracy_score(y_true.flatten(), y_pred.flatten(), normalize=True)
+            #jac = jaccard_similarity_score(y_true.flatten(), y_pred.flatten(), normalize=True)
+            confusion_matr = confusion_matrix(y_true.flatten(), y_pred.flatten())
 
             print('\n\n\n')
-            print(acc)
-            print(jac)
-            print(confusion_matrix)
+            #print(acc)
+            #print(jac)
+            print(confusion_matr)
 
+            acc = 0.
+            aver_acc = 0
+            jacc = 0.
+            aver_jacc = 0.
+
+            sum_rows = np.sum(confusion_matr, axis=1)
+            sum_columns = np.sum(confusion_matr, axis=0)
+
+            print("self.cf.dataset.n_classes")
+            print(self.cf.dataset.n_classes)
+            print(self.cf.dataset.classes[0])
+
+
+            for i in range(self.cf.dataset.n_classes):
+                I = confusion_matr[i][i]
+
+                den_acc = sum_rows[i]
+                acc_percl[i] = float(I)/(den_acc)*100.
+
+                den_jacc = sum_rows[i] + sum_columns[i] - I
+                jacc_percl[i] = float(I)/(den_jacc)*100.
+
+                print(self.cf.dataset.classes[i] + ' accuracy: %f' %(acc))
+                print(self.cf.dataset.classes[i] + ' Jaccard: %f' %(jacc))
+
+                aver_acc += acc
+                aver_jacc += jacc
+
+            aver_acc /= self.cf.dataset.n_classes
+            aver_jacc /= self.cf.dataset.n_classes
+
+            print("aver_acc: %f" %(aver_acc))
+            print("aver_jacc: %f" %(aver_jacc))
 
 
         """
