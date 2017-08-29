@@ -132,10 +132,11 @@ def save_img3(image_batch, mask_batch, output, out_images_folder, epoch,
             img = img.transpose((1, 2, 0))
 
         #img = norm_01(img, mask_batch[j], void_label)*255
-        if (tag2 == 'prediction_images'):
-            pass
-        else:
-            img = norm_01(img, mask_batch[j], -1)*255
+        ##if (tag2 == 'prediction_images'):
+            #img = norm_01(img, mask_batch[j], -1)*255
+        ##    pass
+        ##else:
+        img = norm_01(img, mask_batch[j], -1)*255
 
         #img = image_batch[j].transpose((1, 2, 0))
         label_out = my_label2rgb(output[j], bglabel=void_label,

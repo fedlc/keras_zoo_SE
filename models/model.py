@@ -135,8 +135,16 @@ class One_Net_Model(Model):
 
             ## create hdf5 file to save the predictions, to use them when testing
             y_pred_file = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", "w")
-            y_pred_dset = y_pred_file.create_dataset("y_pred_dataset", (nb_sample,360,480), dtype='i8')
+            y_pred_dset = y_pred_file.create_dataset("y_pred_dataset",
+                                                     (nb_sample,360,480), dtype='i8')
             ## ACHTUNG: for SE, it will have to be dtype='f32'
+
+            print('\ny_pred_dset at the beginning')
+            print(type(y_pred_dset))
+            print(y_pred_dset.shape)
+            print(y_pred_dset.dtype)
+
+
 
             ## ----- LOAD MODEL WEIGHTS -----
 
@@ -146,9 +154,10 @@ class One_Net_Model(Model):
 
             # change 100
             y_pred = self.model.predict_generator(test_gen, val_samples=101,
-                                max_q_size=10,
-                              nb_worker=1, pickle_safe=False)
-            print('\ny_pred')
+                                max_q_size=10, nb_worker=1, pickle_safe=False)
+                                #this combination works, not clear why
+
+            print('\ny_pred right after prediction')
             print(type(y_pred))
             print(y_pred.shape)
             print(y_pred.dtype)
@@ -158,23 +167,23 @@ class One_Net_Model(Model):
             ## WE NEED y_true
             import skimage.io as io
             # change 100
-            y_true = np.array(io.ImageCollection(self.cf.dataset.path_valid_mask + '/*'))[0:101]
-            print('y_true')
-            print(len(y_true))
+            y_true = np.array(io.ImageCollection(self.cf.dataset.path_valid_mask + '/*'))
+
+            print('\ny_true')
             print(type(y_true))
             print(y_true.shape)
             print(y_true.dtype)
 
             # change 100
             #x_true = np.array(io.ImageCollection(self.cf.dataset.path_valid_img + '/*'))[0:101]
-            x_true = io.ImageCollection(self.cf.dataset.path_valid_img + '/*')[0:101]
-            """
+            x_true = np.array(io.ImageCollection(self.cf.dataset.path_valid_img + '/*'))
+
             print('x_true')
             print(len(x_true))
             print(type(x_true))
             print(x_true.shape)
             print(x_true.dtype)
-            """
+
 
 
 
@@ -191,11 +200,15 @@ class One_Net_Model(Model):
             print('\ny_pred after argmax')
             print(type(y_pred))
             print(y_pred.shape)
+            print(y_pred.dtype)
+
             #print(y_pred)
 
-            print('\ny_true after argmax')
+            print('\ny_true after reshape')
             print(type(y_true))
             print(y_true.shape)
+            print(y_true.dtype)
+
             #print(y_pred)
 
             ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
@@ -203,15 +216,139 @@ class One_Net_Model(Model):
             ##y_pred_dset[0:9] = y_pred
 
             #y_pred_dset[_*batch_size : (_*batch_size+len(y_pred))] = y_pred
-            y_pred_dset = y_pred
+            y_pred_dset[:] = y_pred[:]
 
 
             ##
-            print('\ny_pred_dset')
+            print('\ny_pred_dset after assignment of y_pred')
             print(type(y_pred_dset))
             print(y_pred_dset.shape)
             print(y_pred_dset.dtype)
 
+
+            #y_true[y_true == 11] = 0.
+            #x_true[x_true == 11] = 0.
+
+
+            ########################
+            """"""
+
+            y_true_total_from_enqueuer=np.zeros((130,360,480), dtype=np.int)
+            ## ----- LOAD x_true AND y_true FROM enqueuer -----
+            test_gen.reset()
+            ## same values from Save_results callback (?)
+            nb_worker = 5
+            max_q_size = 10
+
+            ## batch size
+            if (tag_gen == 'valid_gen'):
+                batch_size = self.cf.batch_size_valid
+            elif (tag_gen == 'test_gen'):
+                batch_size = self.cf.batch_size_test
+            else:
+                raise ValueError('Unknown data generator tag')
+
+            # Process the dataset
+            nb_iterations = int(math.ceil(nb_sample/float(batch_size)))
+            for _ in range(nb_iterations):
+
+                print("\n\nIteration " + str(_+1) + '/' + str(nb_iterations))
+
+                enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
+                print("\nenqueuer")
+                print(enqueuer)
+                enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
+                               wait_time=0.05)
+
+                # Get data for this minibatch
+                data = None
+
+                print("enqueuer.is_running()")
+                print(enqueuer.is_running())
+
+                while enqueuer.is_running():
+                    if not enqueuer.queue.empty():
+                        print('inside')
+                        data = enqueuer.queue.get()
+                        break
+                    else:
+                        time.sleep(0.05)
+
+                x_true_from_enqueuer = data[0]
+                print('\nx_true_from_enqueuer')
+                print(type(x_true_from_enqueuer))
+                print(x_true_from_enqueuer.shape)
+                #print(x_true)
+
+                y_true_from_enqueuer = data[1].astype('int32')
+
+                print('\ny_true_from_enqueuer before squeeze')
+                print(type(y_true_from_enqueuer))
+                print(y_true_from_enqueuer.shape)
+                print(len(y_true_from_enqueuer))
+
+                y_true_from_enqueuer = np.squeeze(y_true_from_enqueuer, axis=3)
+                print('\ny_true_from_enqueuer after squeeze')
+                print(type(y_true_from_enqueuer))
+                print(y_true_from_enqueuer.shape)
+                print(len(y_true_from_enqueuer))
+
+
+                #y_pred_dset[_*batch_size : (_*batch_size+len(y_pred))] = y_pred
+
+                print('\nAre they the same?')
+                print(np.array_equal(y_true_from_enqueuer, y_true[_*batch_size : (_*batch_size+len(y_true_from_enqueuer))]))
+
+                #y_true_100 = np.zeros((10,360,480), dtype=np.int)
+                #y_true_100[:] = y_true[100]
+                #print(np.array_equal(y_true_from_enqueuer, y_true_100))
+
+
+
+                #if not (np.array_equal(y_true_from_enqueuer, y_true[_*batch_size : (_*batch_size+len(y_true_from_enqueuer))])):
+                print('maybe:')
+                for i in range(len(y_true)):
+                    if np.array_equal(y_true[i], y_true_from_enqueuer[0]):
+                        print(i)
+
+
+                #print('y_true ' +  str(_*batch_size) +' ' +str((_*batch_size+len(y_true_from_enqueuer))))
+                #print(y_true[_*batch_size : (_*batch_size+len(y_true_from_enqueuer))] == y_true_from_enqueuer[:])
+                #print('x_true')
+                #print(x_true[_*batch_size : (_*batch_size+len(x_true_from_enqueuer))] == x_true_from_enqueuer[:])
+                #print(y_true[_*batch_size : (_*batch_size+len(y_true_from_enqueuer))])
+
+
+                #y_true_total_from_enqueuer[_*batch_size : (_*batch_size+len(y_true_from_enqueuer))] = y_true_from_enqueuer[:]
+
+
+                ## ----- SAVE PREDICTIONS AS IMAGES -----
+                """
+                print('Saving prediction images..')
+                # Save output images
+                save_img3(image_batch=x_true_from_enqueuer, mask_batch=y_true_from_enqueuer, output=y_pred[_*batch_size : (_*batch_size+len(y_true_from_enqueuer))],
+                          out_images_folder=self.cf.savepath_pred, epoch=-1,
+                          color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
+                          tag=tag+str(_), void_label=self.cf.dataset.void_class, n_legend_rows=1,
+                          tag2='prediction_images')
+
+                """
+
+                if (_ < nb_iterations-1):
+                    test_gen.next()
+
+                #print('\ny_true_total_from_enqueuer')
+                #print(type(y_true_total_from_enqueuer))
+                #print(y_true_total_from_enqueuer.shape)
+
+                #print(y_true_total_from_enqueuer[0:100]==y_true[0:100])
+
+
+
+                #################
+
+
+            """
             ## ----- SAVE PREDICTIONS AS IMAGES -----
             print('Saving prediction images..')
             # Save output images
@@ -220,12 +357,14 @@ class One_Net_Model(Model):
                       color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
                       tag=tag, void_label=self.cf.dataset.void_class, n_legend_rows=1,
                       tag2='prediction_images')
-
+            """
             ## ----- CLOSE RUNNING STUFF -----
             ## close h5py file (and save it)
             y_pred_file.close()
 
 
+            if (_ < nb_iterations-2):
+                test_gen.next()
 
 
 
