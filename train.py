@@ -44,18 +44,7 @@ def process(configuration):
     cb = Callbacks_Factory().make(cf, valid_gen)
 
     try:
-        import math
-        print('\n')
-        print('n_images_train')
-        print(cf.dataset.n_images_train)
-        print('\n')
-        print('batch_size_test')
-        print(float(cf.batch_size_test))
-        print('\n')
-        print('\nratio')
-        print(int(math.ceil(cf.dataset.n_images_train/float(cf.batch_size_test))))
-        print('\n')
-
+        
         if cf.train_model:
             # Train the model
             start_train = time.time()

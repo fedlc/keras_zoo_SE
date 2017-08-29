@@ -125,24 +125,22 @@ class One_Net_Model(Model):
         if self.cf.pred_model:
             print('\n > Predicting the model...')
 
-            print("test_gen")
-            print(test_gen)
-
-            ## ----- CREATE hdf5 FILE TO SAVE y_pred  -----
+            #print("test_gen")
+            #print(test_gen)
 
             ## get number of images in dataset
             nb_sample = len(test_gen.filenames[:])
 
+            ## ----- CREATE hdf5 FILE TO SAVE y_pred  -----
+
             ## create hdf5 file to save the predictions and the gt, to use them when testing
-            y_pred_and_true_file = h5py.File(self.cf.real_savepath + "/y_pred_and_true_file.hdf5", "w")
+            y_file = h5py.File(self.cf.real_savepath + "/y_file.hdf5", "w")
 
             ## create datasets to save predictions and gt
-            y_pred_dset = y_pred_and_true_file.create_dataset("y_pred_dataset",
+            y_pred_dset = y_file.create_dataset("y_pred_dataset",
                                                      (nb_sample,360,480), dtype='i8')
-            y_true_dset = y_pred_and_true_file.create_dataset("y_true_dataset",
+            y_true_dset = y_file.create_dataset("y_true_dataset",
                                                      (nb_sample,360,480), dtype='i8')
-
-
             ## ACHTUNG: for SE, it will have to be dtype='f32'
 
             print('\ny_pred_dset at the beginning')
@@ -190,7 +188,7 @@ class One_Net_Model(Model):
             print(y_pred_dset.dtype)
 
 
-            ## ----- LOAD x_true AND y_true FROM enqueuer -----
+            ## ----- LOAD x_true AND y_true IN BATCHES FROM enqueuer -----
 
             ## reset to restart from first batch
             test_gen.reset()
@@ -207,8 +205,8 @@ class One_Net_Model(Model):
             else:
                 raise ValueError('Unknown data generator tag')
 
-            y_true_total = np.zeros((nb_sample,360,480), dtype=np.int8)
-            x_true_total = np.zeros((nb_sample,360,480,3), dtype=np.float32)
+            y_true = np.zeros((nb_sample,360,480), dtype='int8')
+            x_true = np.zeros((nb_sample,360,480,3), dtype='float32')
 
             # Process the dataset
             nb_iterations = int(math.ceil(nb_sample/float(batch_size)))
@@ -227,60 +225,58 @@ class One_Net_Model(Model):
 
                 while enqueuer.is_running():
                     if not enqueuer.queue.empty():
-                        print('inside')
+                        #print('inside')
                         data = enqueuer.queue.get()
                         break
                     else:
                         time.sleep(0.05)
 
-                x_true = data[0]
-                print('\nx_true')
-                print(type(x_true))
-                print(x_true.shape)
-                #print(x_true)
+                x_true_batch = data[0]
+                print('\nx_true_batch')
+                print(type(x_true_batch))
+                print(x_true_batch.shape)
+                #print(x_true_batch)
 
-                y_true = data[1].astype('int32')
-                print('\ny_true before squeeze')
-                print(type(y_true))
-                print(y_true.shape)
-                print(len(y_true))
+                y_true_batch = data[1].astype('int32')
+                print('\ny_true_batch before squeeze')
+                print(type(y_true_batch))
+                print(y_true_batch.shape)
 
-                y_true = np.squeeze(y_true, axis=3)
-                print('\ny_true after squeeze')
-                print(type(y_true))
-                print(y_true.shape)
-                print(len(y_true))
+                y_true_batch = np.squeeze(y_true_batch, axis=3)
+                print('\ny_true_batch after squeeze')
+                print(type(y_true_batch))
+                print(y_true_batch.shape)
 
-                # Reshape y_true
+                # Reshape y_true_batch
                 if K.image_dim_ordering() == 'th':
-                    y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[2],
-                                                 y_true.shape[3]))
+                    y_true_batch = np.reshape(y_true_batch, (y_true_batch.shape[0], y_true_batch.shape[2],
+                                                 y_true_batch.shape[3]))
                 else:
-                    y_true = np.reshape(y_true, (y_true.shape[0], y_true.shape[1],
-                                                 y_true.shape[2]))
+                    y_true_batch = np.reshape(y_true_batch, (y_true_batch.shape[0], y_true_batch.shape[1],
+                                                 y_true_batch.shape[2]))
 
-                print('\ny_true after reshape')
-                print(type(y_true))
-                print(y_true.shape)
-                print(y_true.dtype)
+                print('\ny_true_batch after reshape')
+                print(type(y_true_batch))
+                print(y_true_batch.shape)
+                print(y_true_batch.dtype)
 
-                y_true_total[_*batch_size : (_*batch_size+len(y_true))] = y_true
-                x_true_total[_*batch_size : (_*batch_size+len(x_true))] = x_true
+                y_true[_*batch_size : (_*batch_size+len(y_true_batch))] = y_true_batch
+                x_true[_*batch_size : (_*batch_size+len(x_true_batch))] = x_true_batch
 
                 ## go to next batch
                 if (_ < nb_iterations-1):
                     test_gen.next()
 
 
-            y_true_dset[:] = y_true_total[:]
+            y_true_dset[:] = y_true[:]
 
-            print('\ny_true_dset after assignment of y_true_total')
+            print('\ny_true_dset after assignment of y_true')
             print(type(y_true_dset))
             print(y_true_dset.shape)
             print(y_true_dset.dtype)
 
             ## close h5py file (and save it)
-            y_pred_and_true_file.close()
+            y_file.close()
 
             # Stop data generator
             if enqueuer is not None:
@@ -289,7 +285,7 @@ class One_Net_Model(Model):
             ## ----- SAVE PREDICTIONS AS IMAGES -----
             print('Saving prediction images..')
             # Save output images
-            save_img3(image_batch=x_true_total, mask_batch=y_true_total, output=y_pred,
+            save_img3(image_batch=x_true, mask_batch=y_true, output=y_pred,
                       out_images_folder=self.cf.savepath_pred, epoch=-1,
                       color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
                       tag=tag, void_label=self.cf.dataset.void_class, n_legend_rows=1,
@@ -302,6 +298,106 @@ class One_Net_Model(Model):
         if self.cf.test_model:
             print('\n > Testing the model...')
 
+            ## get number of images in dataset
+            nb_sample = len(test_gen.filenames[:])
+
+            ## ----- Load y_pred and y_true from the hdf5 file -----
+
+            print('\nLoading data...\n')
+            y_file = h5py.File(self.cf.real_savepath + "/y_file.hdf5", 'r')
+            y_pred_dset = y_file['.']['y_pred_dataset'].value
+            y_true_dset = y_file['.']['y_true_dataset'].value
+
+            #print('\ny_pred_dset')
+            #print(type(y_pred_dset))
+            #print(y_pred_dset.shape)
+
+            #print("\ny_pred_dset[0]")
+            #print(type(y_pred_dset))
+            #print(y_pred_dset[0].shape)
+
+            y_file.close()
+
+            #y_pred = np.zeros((nb_sample,360,480), dtype=np.int8)
+            #y_true = np.zeros((nb_sample,360,480), dtype=np.int8)
+
+
+            y_pred = np.array(y_pred_dset)
+            y_true = np.array(y_true_dset)
+
+
+            #print('\ny_pred')
+            #print(type(y_pred))
+            #print(y_pred.shape)
+            #print(y_pred.dtype)
+
+            #print("\ny_true")
+            #print(type(y_true))
+            #print(y_true.shape)
+            #print(y_true.dtype)
+
+            ## ----- COMPUTE ACCURACY -----
+
+            #from sklearn.metrics import jaccard_similarity_score
+            #from sklearn.metrics import accuracy_score
+            from sklearn.metrics import confusion_matrix
+
+            #acc = accuracy_score(y_true.flatten(), y_pred.flatten(), normalize=True)
+            #jac = jaccard_similarity_score(y_true.flatten(), y_pred.flatten(), normalize=True)
+
+            confusion_matr = confusion_matrix(y_true.flatten(), y_pred.flatten())
+            #print(confusion_matr)
+
+            nb_classes = len(self.cf.dataset.classes)
+            classes_dict = self.cf.dataset.classes
+
+            acc_percl = np.zeros((nb_classes), dtype='float32')
+            jacc_percl = np.zeros((nb_classes), dtype='float32')
+
+            sum_rows = np.sum(confusion_matr, axis=1)
+            sum_columns = np.sum(confusion_matr, axis=0)
+
+            #print("classes_dict")
+            #print(classes_dict)
+
+            #print('\nsum_rows')
+            #print(sum_rows)
+            #print('\nsum_columns')
+            #print(sum_columns)
+
+            for i in range(nb_classes):
+                I = confusion_matr[i][i]
+
+                den_acc = sum_rows[i]
+                acc_percl[i] = float(I)/(den_acc)
+
+                den_jacc = sum_rows[i] + sum_columns[i] - I
+                jacc_percl[i] = float(I)/(den_jacc)
+
+            for i in range(nb_classes):
+                print('   {:2d} ({:^15}): Jacc: {:6.2f}  Acc: {:6.2f}'.format(i,
+                                                                 classes_dict[i],
+                                                                 jacc_percl[i]*100,
+                                                                 acc_percl[i]*100))
+
+            # Compute jaccard and accuracy mean
+            jacc_mean = np.nanmean(jacc_percl)
+            acc_mean = np.nanmean(acc_percl)
+
+            print('\n   Jaccard mean:  {}'.format(jacc_mean))
+            print('   Accuracy mean: {}\n'.format(acc_mean))
+
+            with open(self.cf.real_savepath + '/singleModel_test_results.txt', 'w') as f:
+                for i in range(nb_classes):
+                    f.write('   {:2d} ({:^15}): Jacc: {:6.2f}  Acc: {:6.2f}\n'.format(i,
+                                                                     classes_dict[i],
+                                                                     jacc_percl[i]*100,
+                                                                     acc_percl[i]*100))
+                f.write('\n   Jaccard mean:  {}\n'.format(jacc_mean))
+                f.write('   Accuracy mean: {}\n'.format(acc_mean))
+
+    """
+            OLD VERSION
             ## ----- LOAD y_true FROM enqueuer -----
             ## same values from Save_results callback (?)
             nb_worker = 5
@@ -339,79 +435,10 @@ class One_Net_Model(Model):
             print(y_true_resized.shape)
             print(y_true_resized)
 
-            ## ----- LOAD y_pred from the hdf5 file -----
 
-            y_pred_file = h5py.File(self.cf.real_savepath + "/y_pred.hdf5", 'r')
-            y_pred_dset = y_pred_file['.']['y_pred_dataset'].value
-
-            print('\ny_pred_dset')
-            print(type(y_pred_dset))
-            print('y_pred_dset.shape')
-            print(y_pred_dset.shape)
-            print(y_pred_dset[0].shape)
-
-            print("y_pred_dset[0].shape")
-            print(y_pred_dset[0].shape)
-            print(y_pred_dset[0])
-
-            y_pred_file.close()
-
-            y_pred = y_pred_dset[0]
-
-
-            ## ----- COMPUTE ACCURACY -----
-
-
-            #from sklearn.metrics import jaccard_similarity_score
-            #from sklearn.metrics import accuracy_score
-            from sklearn.metrics import confusion_matrix
-
-            #acc = accuracy_score(y_true.flatten(), y_pred.flatten(), normalize=True)
-            #jac = jaccard_similarity_score(y_true.flatten(), y_pred.flatten(), normalize=True)
-            confusion_matr = confusion_matrix(y_true.flatten(), y_pred.flatten())
-
-            print('\n\n\n')
-            #print(acc)
-            #print(jac)
-            print(confusion_matr)
-
-            acc = 0.
-            aver_acc = 0
-            jacc = 0.
-            aver_jacc = 0.
-
-            sum_rows = np.sum(confusion_matr, axis=1)
-            sum_columns = np.sum(confusion_matr, axis=0)
-
-            print("self.cf.dataset.n_classes")
-            print(self.cf.dataset.n_classes)
-            print(self.cf.dataset.classes[0])
-
-
-            for i in range(self.cf.dataset.n_classes):
-                I = confusion_matr[i][i]
-
-                den_acc = sum_rows[i]
-                acc_percl[i] = float(I)/(den_acc)*100.
-
-                den_jacc = sum_rows[i] + sum_columns[i] - I
-                jacc_percl[i] = float(I)/(den_jacc)*100.
-
-                print(self.cf.dataset.classes[i] + ' accuracy: %f' %(acc))
-                print(self.cf.dataset.classes[i] + ' Jaccard: %f' %(jacc))
-
-                aver_acc += acc
-                aver_jacc += jacc
-
-            aver_acc /= self.cf.dataset.n_classes
-            aver_jacc /= self.cf.dataset.n_classes
-
-            print("aver_acc: %f" %(aver_acc))
-            print("aver_jacc: %f" %(aver_jacc))
-
-
-        """
-        OLD VERSION
+    """
+    """
+        OLD VERSION OF test
         if self.cf.test_model:
             print('\n > Testing the model...')
             # Load best trained model
@@ -459,7 +486,7 @@ class One_Net_Model(Model):
                 jacc_mean = np.nanmean(jacc_percl)
                 print ('   Jaccard mean: {}'.format(jacc_mean))
 
-            """
+    """
 
 
 
@@ -493,7 +520,7 @@ class One_Net_Model(Model):
 
 
 
-            """
+    """
             OLD VERSION 2
 
             ## WE NEED y_true
@@ -517,10 +544,10 @@ class One_Net_Model(Model):
             print(x_true.dtype)
 
 
-            """
+    """
 
 
-            """
+    """
             Old version :(
 
             print("test_gen")
@@ -687,7 +714,7 @@ class One_Net_Model(Model):
             y_pred_file.close()
 
 
-            """
+    """
 
     """
     OLD VERSION OF predict
