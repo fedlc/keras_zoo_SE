@@ -45,11 +45,11 @@ class Configuration():
         ## Modify savepath if we are training just to make enqueuer work (in predict)
         ## add also test_model case?
         ## (it is provisional, see notes)
-        ## if (cf.SE_pred_model or cf.pred_model):
+        ##if (cf.SE_pred_model or cf.pred_model or ):
         if (os.path.exists(cf.savepath)):
             cf.real_savepath = cf.savepath
-            cf.savepath = os.path.join(cf.savepath, 'fake_training_savepath')
-            cf.final_savepath = os.path.join(cf.final_savepath, 'fake_training_savepath')
+            cf.savepath = os.path.join(cf.savepath, 'fake_savepath')
+            cf.final_savepath = os.path.join(cf.final_savepath, 'fake_savepath')
 
         ## from now on, cf.savepath is fake if we are predicting (and/or testing?),
         ## i.e. if we are traininng just to make enqueuer work (in predict)
