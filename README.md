@@ -1,4 +1,4 @@
-# Snapshot Ensembling for semantic segmentation (integration in keras_zoo) - NOT WORKING YET
+# Snapshot Ensembling for semantic segmentation (integration in keras_zoo)
 # ----------------------------------------------------------------------
 
 # Keras implementation of Classification, Detection and Segmentation Networks
@@ -18,12 +18,12 @@ This repo contains the code to train and evaluate state of the art classificatio
  - [x] ResNet50 network as described in [Deep Residual Learning for Image Recognition](https://arxiv.org/pdf/1512.03385v1.pdf).
  - [x] InceptionV3 network as described in [Rethinking the Inception Architecture for Computer Vision](https://arxiv.org/pdf/1512.00567v3.pdf).
  - [x] DenseNet network as described in [Densely Connected Convolutional Networks](https://arxiv.org/pdf/1608.06993).
- 
+
 ### Detection
  - [X] YOLO network as described in [You Only Look Once: Unified, Real-Time Object Detection](https://pjreddie.com/media/files/papers/yolo.pdf).
  - [ ] SSD network as described in [SSD: Single Shot MultiBox Detector](https://arxiv.org/pdf/1512.02325).
  - [ ] Overfeat network as described in []().
-  
+
 ### Segmentation
  - [x] FCN8 network as described in [Fully Convolutional Neural Networks](https://arxiv.org/abs/1608.06993).
  - [x] UNET network as described in [U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/pdf/1505.04597).
@@ -39,11 +39,11 @@ This repo contains the code to train and evaluate state of the art classificatio
  - [x] INRIA pedestrian dataset described in []().
  - [ ] ImageNet dataset described in []().
  - [ ] Pascal dataset described in []().
- 
+
 ### Detection
  - [x] TT100K detection dataset described in []().
  - [x] INRIA pedestrian dataset described in []().
-  
+
 ### Segmentation
  - [x] Camvid dataset described in [Semantic Object Classes in Video: A High-Definition Ground Truth Database ](http://www.cs.ucl.ac.uk/staff/G.Brostow/papers/SemanticObjectClassesInVideo_BrostowEtAl2009.pdf).
  - [x] Cityscapes dataset described in [The Cityscapes Dataset for Semantic Urban Scene Understanding](https://www.cityscapes-dataset.com/wordpress/wp-content/papercite-data/pdf/cordts2016cityscapes.pdf).
