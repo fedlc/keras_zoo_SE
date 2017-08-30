@@ -46,10 +46,12 @@ class Configuration():
         ## add also test_model case?
         ## (it is provisional, see notes)
         ##if (cf.SE_pred_model or cf.pred_model or ):
+        cf.real_savepath = cf.savepath
+
         if (os.path.exists(cf.savepath)):
-            cf.real_savepath = cf.savepath
-            cf.savepath = os.path.join(cf.savepath, 'fake_savepath')
-            cf.final_savepath = os.path.join(cf.final_savepath, 'fake_savepath')
+            #cf.real_savepath = cf.savepath
+            cf.savepath = os.path.join(cf.savepath, 'second_savepath')
+            cf.final_savepath = os.path.join(cf.final_savepath, 'second_savepath')
 
         ## from now on, cf.savepath is fake if we are predicting (and/or testing?),
         ## i.e. if we are traininng just to make enqueuer work (in predict)
@@ -67,10 +69,13 @@ class Configuration():
             os.makedirs(cf.savepath_images_during_train)
 
         ## Create output folders for the weights for SE callback (if enabled)
-        if cf.SE_enabled:
+        if (cf.SE_enabled and cf.train_model):
             cf.savepath_SE_weights = os.path.join(cf.savepath, 'SE_weights')
             if not os.path.exists(cf.savepath_SE_weights):
                 os.makedirs(cf.savepath_SE_weights)
+        elif (cf.SE_pred_model):
+            cf.savepath_SE_weights = os.path.join(cf.real_savepath, 'SE_weights')
+
 
 
         # Copy config file
@@ -82,6 +87,12 @@ class Configuration():
             cf.savepath_pred = os.path.join(cf.real_savepath, 'prediction_images')
             if not os.path.exists(cf.savepath_pred):
                 os.makedirs(cf.savepath_pred)
+
+        if (cf.SE_pred_model):
+            cf.savepath_pred_SE = os.path.join(cf.real_savepath, 'prediction_images_SE')
+            if not os.path.exists(cf.savepath_pred_SE):
+                os.makedirs(cf.savepath_pred_SE)
+
 
 
         # Load dataset configuration

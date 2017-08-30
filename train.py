@@ -44,7 +44,7 @@ def process(configuration):
     cb = Callbacks_Factory().make(cf, valid_gen)
 
     try:
-        
+
         if cf.train_model:
             # Train the model
             start_train = time.time()
@@ -65,16 +65,22 @@ def process(configuration):
 
         if cf.SE_pred_model:
             # Compute validation metrics
-            model.SE_predict(valid_gen, tag='pred', tag_gen='valid_gen')
+            model.SE_predict(valid_gen, tag='SE_pred', tag_gen='valid_gen')
             # Compute test metrics
-            model.SE_predict(test_gen, tag='pred', tag_gen='test_gen')
-
+            #model.SE_predict(test_gen, tag='SE_pred', tag_gen='test_gen')
 
         if cf.test_model:
             # Compute validation metrics
-            model.test(valid_gen, tag_gen='valid_gen')
+            model.test(valid_gen, tag='test', tag_gen='valid_gen')
             # Compute test metrics
-            #model.test(test_gen, tag_gen='test_gen')
+            #model.test(test_gen, tag='test', tag_gen='test_gen')
+
+        if cf.SE_test_model:
+            # Compute validation metrics
+            model.test(valid_gen, tag='test_SE', tag_gen='valid_gen')
+            # Compute test metrics
+            #model.test(test_gen, tag='test_SE', tag_gen='test_gen')
+
 
     except KeyboardInterrupt:
         # In case of early stopping, transfer the local files

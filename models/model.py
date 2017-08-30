@@ -124,6 +124,7 @@ class One_Net_Model(Model):
     def predict(self, test_gen, tag='pred', tag_gen=''):
         if self.cf.pred_model:
             print('\n > Predicting the model...')
+            test_gen.reset()
 
             #print("test_gen")
             #print(test_gen)
@@ -131,7 +132,7 @@ class One_Net_Model(Model):
             ## get number of images in dataset
             nb_sample = len(test_gen.filenames[:])
 
-            ## ----- CREATE hdf5 FILE TO SAVE y_pred  -----
+            ## ----- CREATE hdf5 FILE TO SAVE y_pred AND y_true  -----
 
             ## create hdf5 file to save the predictions and the gt, to use them when testing
             y_file = h5py.File(self.cf.real_savepath + "/y_file.hdf5", "w")
@@ -292,11 +293,225 @@ class One_Net_Model(Model):
                       tag2='prediction_images')
 
 
+    ##
+    def SE_predict(self, test_gen, tag='SE_pred', tag_gen=''):
+        if self.cf.SE_pred_model:
+            print('\n > Snapshot Ensembling, predicting using models from the ensemble...')
+
+            test_gen.reset()
+
+            # Load models
+            #self.model.load_weights(self.cf.weights_file)
+            model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
+            nb_models = len(model_list)
+            print(model_list)
+            print(nb_models)
+
+            ## get number of images in dataset
+            nb_sample = len(test_gen.filenames[:]) #101
+
+            ## ----- CREATE hdf5 FILE TO SAVE y_pred AND y_true  -----
+
+            ## create hdf5 file to save the predictions and the gt, to use them when testing
+            y_file = h5py.File(self.cf.real_savepath + "/y_file_SE.hdf5", "w")
+
+            ## create datasets to save predictions and gt
+            y_pred_dset = y_file.create_dataset("y_pred_dataset",
+                                                     (nb_sample,360,480), dtype='i8')
+            y_true_dset = y_file.create_dataset("y_true_dataset",
+                                                     (nb_sample,360,480), dtype='i8')
+
+
+            print('\ny_pred_dset at the beginning')
+            print(type(y_pred_dset))
+            print(y_pred_dset.shape)
+            print(y_pred_dset.dtype)
+
+
+            ## ----- CREATE hdf5 FILE TO SAVE THE SOFTMAX PREDICTIONS  -----
+
+            ## create hdf5 file to save the predictions and the gt, to use them when testing
+            #y_softmax_file = h5py.File(self.cf.real_savepath + "/y_softmax_file.hdf5", "w")
+
+            ## create datasets to save predictions and gt
+            #y_softmax_dset = y_softmax_file.create_dataset("y_softmax_dataset",
+            #                                         (nb_sample,360,480,11), dtype='float32')
+            ## ACHTUNG: for SE, it will have to be dtype='f32'
+
+            y_softmax = np.zeros((nb_models,nb_sample,360,480,11), dtype='float32')
+
+            #print('\ny_softmax_dset')
+            #print(type(y_softmax_dset))
+            #print(y_softmax_dset.shape)
+            #print(y_softmax_dset.dtype)
+
+            ## ----- LOAD MODEL WEIGHTS -----
+            i = 0
+            for model_file in model_list:
+                test_gen.reset()
+                # Load best trained model (or last? see camvid.py)
+                print('Loading model ' + model_file + '...')
+                weights_fl = os.path.join(self.cf.savepath_SE_weights, model_file)
+                self.model.load_weights(weights_fl)
+
+                print('Predicting with ' + model_file + '...')
+                y_softmax[i] = self.model.predict_generator(test_gen, val_samples=nb_sample,
+                            max_q_size=10, nb_worker=1, pickle_safe=False)
+                            #this combination works, not clear why
+                i += 1
+
+
+            print('\ny_softmax right after prediction')
+            print(type(y_softmax))
+            print(y_softmax.shape)
+            print(y_softmax.dtype)
+            #print(y_pred)
+
+            w = np.ones((nb_models),dtype='int8')
+            y_softmax = np.average(y_softmax, axis=0, weights=w)
+
+            print('\ny_softmax after average')
+            print(type(y_softmax))
+            print(y_softmax.shape)
+            print(y_softmax.dtype)
+            #print(y_pred)
+
+            y_pred = y_softmax
+
+
+            # Compute the y_pred argmax
+            if K.image_dim_ordering() == 'th':
+                y_pred = np.argmax(y_pred, axis=1)
+            else:
+                y_pred = np.argmax(y_pred, axis=3)
+
+
+            print('\ny_pred after argmax')
+            print(type(y_pred))
+            print(y_pred.shape)
+            print(y_pred.dtype)
+
+            ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
+
+            y_pred_dset[:] = y_pred[:]
+
+            print('\ny_pred_dset after assignment of y_pred')
+            print(type(y_pred_dset))
+            print(y_pred_dset.shape)
+            print(y_pred_dset.dtype)
+
+
+            ## ----- LOAD x_true AND y_true IN BATCHES FROM enqueuer -----
+
+            ## reset to restart from first batch
+            test_gen.reset()
+
+            ## same values from Save_results callback (?)
+            nb_worker = 5
+            max_q_size = 10
+
+            ## batch size
+            if (tag_gen == 'valid_gen'):
+                batch_size = self.cf.batch_size_valid
+            elif (tag_gen == 'test_gen'):
+                batch_size = self.cf.batch_size_test
+            else:
+                raise ValueError('Unknown data generator tag')
+
+            y_true = np.zeros((nb_sample,360,480), dtype='int8')
+            x_true = np.zeros((nb_sample,360,480,3), dtype='float32')
+
+            # Process the dataset
+            nb_iterations = int(math.ceil(nb_sample/float(batch_size)))
+            for _ in range(nb_iterations):
+
+                print("\n\nIteration " + str(_+1) + '/' + str(nb_iterations))
+
+                enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
+                #print("\nenqueuer")
+                #print(enqueuer)
+                enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
+                               wait_time=0.05)
+
+                # Get data for this minibatch
+                data = None
+
+                while enqueuer.is_running():
+                    if not enqueuer.queue.empty():
+                        #print('inside')
+                        data = enqueuer.queue.get()
+                        break
+                    else:
+                        time.sleep(0.05)
+
+                x_true_batch = data[0]
+                print('\nx_true_batch')
+                print(type(x_true_batch))
+                print(x_true_batch.shape)
+                #print(x_true_batch)
+
+                y_true_batch = data[1].astype('int32')
+                print('\ny_true_batch before squeeze')
+                print(type(y_true_batch))
+                print(y_true_batch.shape)
+
+                y_true_batch = np.squeeze(y_true_batch, axis=3)
+                print('\ny_true_batch after squeeze')
+                print(type(y_true_batch))
+                print(y_true_batch.shape)
+
+                # Reshape y_true_batch
+                if K.image_dim_ordering() == 'th':
+                    y_true_batch = np.reshape(y_true_batch, (y_true_batch.shape[0], y_true_batch.shape[2],
+                                                 y_true_batch.shape[3]))
+                else:
+                    y_true_batch = np.reshape(y_true_batch, (y_true_batch.shape[0], y_true_batch.shape[1],
+                                                 y_true_batch.shape[2]))
+
+                print('\ny_true_batch after reshape')
+                print(type(y_true_batch))
+                print(y_true_batch.shape)
+                print(y_true_batch.dtype)
+
+                y_true[_*batch_size : (_*batch_size+len(y_true_batch))] = y_true_batch
+                x_true[_*batch_size : (_*batch_size+len(x_true_batch))] = x_true_batch
+
+                ## go to next batch
+                if (_ < nb_iterations-1):
+                    test_gen.next()
+
+
+            y_true_dset[:] = y_true[:]
+
+            print('\ny_true_dset after assignment of y_true')
+            print(type(y_true_dset))
+            print(y_true_dset.shape)
+            print(y_true_dset.dtype)
+
+            ## close h5py file (and save it)
+            y_file.close()
+
+            # Stop data generator
+            if enqueuer is not None:
+                enqueuer.stop()
+
+            ## ----- SAVE PREDICTIONS AS IMAGES -----
+            print('Saving prediction images..')
+            # Save output images
+            save_img3(image_batch=x_true, mask_batch=y_true, output=y_pred,
+                      out_images_folder=self.cf.savepath_pred_SE, epoch=-1,
+                      color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
+                      tag=tag, void_label=self.cf.dataset.void_class, n_legend_rows=1,
+                      tag2='prediction_images')
+
+
+
 
     # Test the model
-    def test(self, test_gen, tag_gen=''):
+    def test(self, test_gen, tag='', tag_gen=''):
         if self.cf.test_model:
             print('\n > Testing the model...')
+            test_gen.reset()
 
             ## get number of images in dataset
             nb_sample = len(test_gen.filenames[:])
@@ -304,7 +519,13 @@ class One_Net_Model(Model):
             ## ----- Load y_pred and y_true from the hdf5 file -----
 
             print('\nLoading data...\n')
-            y_file = h5py.File(self.cf.real_savepath + "/y_file.hdf5", 'r')
+
+            if tag=='test_SE':
+                y_file = h5py.File(self.cf.real_savepath + "/y_file_SE.hdf5", 'r')
+            else:
+                y_file = h5py.File(self.cf.real_savepath + "/y_file.hdf5", 'r')
+
+
             y_pred_dset = y_file['.']['y_pred_dataset'].value
             y_true_dset = y_file['.']['y_true_dataset'].value
 
@@ -387,7 +608,15 @@ class One_Net_Model(Model):
             print('\n   Jaccard mean:  {}'.format(jacc_mean))
             print('   Accuracy mean: {}\n'.format(acc_mean))
 
-            with open(self.cf.real_savepath + '/singleModel_test_results.txt', 'w') as f:
+
+
+            if tag=='test_SE':
+                file_results = '/SE_Model_test_results.txt'
+            else:
+                file_results = '/single_Model_test_results.txt'
+
+
+            with open(self.cf.real_savepath + file_results, 'w') as f:
                 for i in range(nb_classes):
                     f.write('   {:2d} ({:^15}): Jacc: {:6.2f}  Acc: {:6.2f}\n'.format(i,
                                                                      classes_dict[i],
@@ -487,35 +716,6 @@ class One_Net_Model(Model):
                 print ('   Jaccard mean: {}'.format(jacc_mean))
 
     """
-
-
-
-
-    ##
-    def SE_predict(self, test_gen, tag='SE_pred', tag_gen=''):
-        if self.cf.SE_pred_model:
-            print('\n > Snapshot Ensembling, predicting using models from the ensemble0...')
-            # Load models
-            #self.model.load_weights(self.cf.weights_file)
-            #model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
-            #print(model_list)
-            #print('AAAAAAAAAAAA')
-
-
-
-            # ------------------------------------------
-            # Create a data generator
-            ## The task of an Enqueuer is to use parallelism to speed up preprocessing.
-            ## This is done with processes or threads.
-
-
-
-
-
-
-
-
-
 
 
 
