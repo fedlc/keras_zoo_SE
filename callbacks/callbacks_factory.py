@@ -53,6 +53,8 @@ class Callbacks_Factory():
                                    save_weights_only=cf.checkpoint_save_weights_only)]
 
         # Plot the loss after every epoch.
+        ## save plot1.png
+
         if cf.plotHist_enabled:
             print('   Plot per epoch')
             cb += [History_plot(cf.dataset.n_classes, cf.savepath,

@@ -18,24 +18,24 @@ weights_file                 = 'weights.hdf5'  # Training weight file name
 
 ## To train: activate only train
 ## to predict/test: activate train and predict/test
-train_model                  = False            # Train the model
-pred_model                   = True           # Predict using the model
-test_model                   = True            # Test the model
+train_model                  = True            # Train the model
+pred_model                   = False           # Predict using the model
+test_model                   = False           # Test the model
 
 ##
-SE_pred_model                = True           # predict using models from Snapshot Ensemble
-SE_test_model                = True           # test using models from Snapshot Ensemble
+SE_pred_model                = False           # predict using models from Snapshot Ensemble
+SE_test_model                = False           # test using models from Snapshot Ensemble
 
 ##
 # Debug
-debug                        = True            # Use only few images for debuging
+debug                        = False            # Use only few images for debuging
 debug_images_train           = 20 #50              # N images for training in debug mode (-1 means all)
 debug_images_valid           = 10 #30              # N images for validation in debug mode (-1 means all)
 debug_images_test            = 10 #30              # N images for testing in debug mode (-1 means all)
 debug_n_epochs               = 2 #2             # N of training epochs in debug mode
 
 # Batch sizes
-batch_size_train             = 2               # Batch size during training
+batch_size_train             = 3 ##2               # Batch size during training ##means, for training set
 batch_size_valid             = 10              # Batch size during validation
 batch_size_test              = 10              # Batch size during testing
 crop_size_train              = None # (256, 256)      # Crop size during training (Height, Width) or None
@@ -46,6 +46,7 @@ resize_valid                 = None            # Resize the image during validat
 resize_test                  = None            # Resize the image during testing
 
 # Data shuffle
+## To actually shuffle, we need seed=False (see class Iterator in keras.preprocessing.image), otherwise with fixed seed we get the same permutation
 shuffle_train                = True            # Whether to shuffle the training data
 shuffle_valid                = False           # Whether to shuffle the validation data
 shuffle_test                 = False           # Whether to shuffle the testing data
@@ -58,9 +59,9 @@ workers                      = 5               # Maximum number of processes to 
 ##
 # Training parameters
 optimizer                    = 'sgd'          # Optimizer
-learning_rate                = 1.          # Training learning rate
+learning_rate                = 0.1          # Training learning rate
 weight_decay                 = 0.              # Weight decay or L2 parameter norm penalty
-n_epochs                     = 1000            # Number of epochs during training
+n_epochs                     = 300##1000            # Number of epochs during training
 
 # Callback save results
 save_results_enabled         = True            # Enable the Callback
@@ -69,7 +70,7 @@ save_results_batch_size      = 5               # Size of the batch
 save_results_n_legend_rows   = 1               # Number of rows when showwing the legend
 
 # Callback early stoping
-earlyStopping_enabled        = True           # Enable the Callback
+earlyStopping_enabled        = False##True           # Enable the Callback
 earlyStopping_monitor        = 'val_jaccard'   # Metric to monitor
 earlyStopping_mode           = 'max'           # Mode ['max' | 'min']
 earlyStopping_patience       = 100             # Max patience for the early stopping
@@ -79,7 +80,7 @@ earlyStopping_verbose        = 0               # Verbosity of the early stopping
 checkpoint_enabled           = True            # Enable the Callback
 checkpoint_monitor           = 'val_jaccard'   # Metric to monitor
 checkpoint_mode              = 'max'           # Mode ['max' | 'min']
-##change to last
+##changed to last
 checkpoint_save_best_only    = False            # Save best or last model
 checkpoint_save_weights_only = True            # Save only weights or also model
 checkpoint_verbose           = 0               # Verbosity of the checkpoint
