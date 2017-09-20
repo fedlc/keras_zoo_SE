@@ -123,7 +123,7 @@ class One_Net_Model(Model):
     # Predict the model
     def predict(self, test_gen, tag='pred', tag_gen=''):
         if self.cf.pred_model:
-            print('\n > Predicting the model...')
+            print('\n > Predicting the single model using ' + tag_gen)
             test_gen.reset()
 
             #print("test_gen")
@@ -135,37 +135,49 @@ class One_Net_Model(Model):
             ## ----- CREATE hdf5 FILE TO SAVE y_pred AND y_true  -----
 
             ## create hdf5 file to save the predictions and the gt, to use them when testing
-            y_file = h5py.File(self.cf.real_savepath + "/y_file.hdf5", "w")
+            y_file = h5py.File(self.cf.real_savepath + "/y_file_" + tag_gen +".hdf5", "w")
+
+            ## provisional
+            if self.cf.resize_valid != None:
+                if (tag_gen == 'valid_gen'):
+                    img_height, img_width = self.cf.resize_valid
+                elif (tag_gen == 'test_gen'):
+                    img_height, img_width = self.cf.resize_test
+                else:
+                    raise ValueError('Unknown data generator tag')
+            else:
+                img_height, img_width = (360,480)
+                ## to change for cityscape (if we don't ask to resize)
+
 
             ## create datasets to save predictions and gt
             y_pred_dset = y_file.create_dataset("y_pred_dataset",
-                                                     (nb_sample,360,480), dtype='i8')
+                                                     (nb_sample,img_height,img_width), dtype='i8')
             y_true_dset = y_file.create_dataset("y_true_dataset",
-                                                     (nb_sample,360,480), dtype='i8')
-            ## ACHTUNG: for SE, it will have to be dtype='f32'
+                                                     (nb_sample,img_height,img_width), dtype='i8')
+            ## ACHTUNG: for SE, it will have to be dtype='f32' --NO!
 
-            print('\ny_pred_dset at the beginning')
-            print(type(y_pred_dset))
-            print(y_pred_dset.shape)
-            print(y_pred_dset.dtype)
+            #print('\ny_pred_dset at the beginning')
+            #print(type(y_pred_dset))
+            #print(y_pred_dset.shape)
+            #print(y_pred_dset.dtype)
 
 
             ## ----- LOAD MODEL WEIGHTS -----
-
+            print('Loading model weights')
             # Load best trained model (or last? see camvid.py)
             weights_fl = os.path.join(self.cf.real_savepath, "weights.hdf5")
             self.model.load_weights(weights_fl)
 
+            print('Predicting..')
             y_pred = self.model.predict_generator(test_gen, val_samples=nb_sample,
                                 max_q_size=10, nb_worker=1, pickle_safe=False)
                                 #this combination works, not clear why
 
-            print('\ny_pred right after prediction')
-            print(type(y_pred))
-            print(y_pred.shape)
-            print(y_pred.dtype)
-            #print(y_pred)
-
+            #print('\ny_pred right after prediction')
+            #print(type(y_pred))
+            #print(y_pred.shape)
+            #print(y_pred.dtype)
 
             # Compute the y_pred argmax
             if K.image_dim_ordering() == 'th':
@@ -174,23 +186,23 @@ class One_Net_Model(Model):
                 y_pred = np.argmax(y_pred, axis=3)
 
 
-            print('\ny_pred after argmax')
-            print(type(y_pred))
-            print(y_pred.shape)
-            print(y_pred.dtype)
+            #print('\ny_pred after argmax')
+            #print(type(y_pred))
+            #print(y_pred.shape)
+            #print(y_pred.dtype)
 
             ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
-
+            print('Saving predictions')
             y_pred_dset[:] = y_pred[:]
 
-            print('\ny_pred_dset after assignment of y_pred')
-            print(type(y_pred_dset))
-            print(y_pred_dset.shape)
-            print(y_pred_dset.dtype)
+            #print('\ny_pred_dset after assignment of y_pred')
+            #print(type(y_pred_dset))
+            #print(y_pred_dset.shape)
+            #print(y_pred_dset.dtype)
 
 
             ## ----- LOAD x_true AND y_true IN BATCHES FROM enqueuer -----
-
+            print('\nLoading x_true and y_true from enqueuer..')
             ## reset to restart from first batch
             test_gen.reset()
 
@@ -206,14 +218,14 @@ class One_Net_Model(Model):
             else:
                 raise ValueError('Unknown data generator tag')
 
-            y_true = np.zeros((nb_sample,360,480), dtype='int8')
-            x_true = np.zeros((nb_sample,360,480,3), dtype='float32')
+            y_true = np.zeros((nb_sample,img_height,img_width), dtype='int8')
+            x_true = np.zeros((nb_sample,img_height,img_width,3), dtype='float32')
 
             # Process the dataset
             nb_iterations = int(math.ceil(nb_sample/float(batch_size)))
             for _ in range(nb_iterations):
 
-                print("\n\nIteration " + str(_+1) + '/' + str(nb_iterations))
+                print("  Iteration " + str(_+1) + '/' + str(nb_iterations))
 
                 enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
                 #print("\nenqueuer")
@@ -233,20 +245,19 @@ class One_Net_Model(Model):
                         time.sleep(0.05)
 
                 x_true_batch = data[0]
-                print('\nx_true_batch')
-                print(type(x_true_batch))
-                print(x_true_batch.shape)
-                #print(x_true_batch)
+                #print('\nx_true_batch')
+                #print(type(x_true_batch))
+                #print(x_true_batch.shape)
 
                 y_true_batch = data[1].astype('int32')
-                print('\ny_true_batch before squeeze')
-                print(type(y_true_batch))
-                print(y_true_batch.shape)
+                #print('\ny_true_batch before squeeze')
+                #print(type(y_true_batch))
+                #print(y_true_batch.shape)
 
                 y_true_batch = np.squeeze(y_true_batch, axis=3)
-                print('\ny_true_batch after squeeze')
-                print(type(y_true_batch))
-                print(y_true_batch.shape)
+                #print('\ny_true_batch after squeeze')
+                #print(type(y_true_batch))
+                #print(y_true_batch.shape)
 
                 # Reshape y_true_batch
                 if K.image_dim_ordering() == 'th':
@@ -256,10 +267,10 @@ class One_Net_Model(Model):
                     y_true_batch = np.reshape(y_true_batch, (y_true_batch.shape[0], y_true_batch.shape[1],
                                                  y_true_batch.shape[2]))
 
-                print('\ny_true_batch after reshape')
-                print(type(y_true_batch))
-                print(y_true_batch.shape)
-                print(y_true_batch.dtype)
+                #print('\ny_true_batch after reshape')
+                #print(type(y_true_batch))
+                #print(y_true_batch.shape)
+                #print(y_true_batch.dtype)
 
                 y_true[_*batch_size : (_*batch_size+len(y_true_batch))] = y_true_batch
                 x_true[_*batch_size : (_*batch_size+len(x_true_batch))] = x_true_batch
@@ -268,13 +279,13 @@ class One_Net_Model(Model):
                 if (_ < nb_iterations-1):
                     test_gen.next()
 
-
+            print('Saving y_true')
             y_true_dset[:] = y_true[:]
 
-            print('\ny_true_dset after assignment of y_true')
-            print(type(y_true_dset))
-            print(y_true_dset.shape)
-            print(y_true_dset.dtype)
+            #print('\ny_true_dset after assignment of y_true')
+            #print(type(y_true_dset))
+            #print(y_true_dset.shape)
+            #print(y_true_dset.dtype)
 
             ## close h5py file (and save it)
             y_file.close()
@@ -283,29 +294,53 @@ class One_Net_Model(Model):
             if enqueuer is not None:
                 enqueuer.stop()
 
+
+            if (tag_gen == 'valid_gen'):
+                img_savepath = self.cf.savepath_pred_valid_gen
+            elif (tag_gen == 'test_gen'):
+                img_savepath = self.cf.savepath_pred_test_gen
+            else:
+                raise ValueError('Unknown data generator tag')
+
+
+
             ## ----- SAVE PREDICTIONS AS IMAGES -----
-            print('Saving prediction images..')
+            print('\nSaving prediction images..')
             # Save output images
             save_img3(image_batch=x_true, mask_batch=y_true, output=y_pred,
-                      out_images_folder=self.cf.savepath_pred, epoch=-1,
+                      out_images_folder=img_savepath, epoch=-1,
                       color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
                       tag=tag, void_label=self.cf.dataset.void_class, n_legend_rows=1,
                       tag2='prediction_images')
+
+    print('\nSingle model prediction of ' + tag_gen + ' terminated')
 
 
     ##
     def SE_predict(self, test_gen, tag='SE_pred', tag_gen=''):
         if self.cf.SE_pred_model:
-            print('\n > Snapshot Ensembling, predicting using models from the ensemble...')
+            print('\n > Snapshot Ensembling predictions')
 
             test_gen.reset()
 
-            # Load models
-            #self.model.load_weights(self.cf.weights_file)
+
+            ## provisional
+            if self.cf.resize_valid != None:
+                if (tag_gen == 'valid_gen'):
+                    img_height, img_width = self.cf.resize_valid
+                elif (tag_gen == 'test_gen'):
+                    img_height, img_width = self.cf.resize_test
+                else:
+                    raise ValueError('Unknown data generator tag')
+            else:
+                img_height, img_width = (360,480)
+                ## to change for cityscape
+
+
             model_list =  sorted(os.listdir(self.cf.savepath_SE_weights))
             nb_models = len(model_list)
-            print(model_list)
-            print(nb_models)
+            #print(model_list)
+            #print(nb_models)
 
             ## get number of images in dataset
             nb_sample = len(test_gen.filenames[:]) #101
@@ -313,19 +348,19 @@ class One_Net_Model(Model):
             ## ----- CREATE hdf5 FILE TO SAVE y_pred AND y_true  -----
 
             ## create hdf5 file to save the predictions and the gt, to use them when testing
-            y_file = h5py.File(self.cf.real_savepath + "/y_file_SE.hdf5", "w")
+            y_file = h5py.File(self.cf.real_savepath + "/y_file_SE_" + tag_gen +".hdf5", "w")
 
             ## create datasets to save predictions and gt
             y_pred_dset = y_file.create_dataset("y_pred_dataset",
-                                                     (nb_sample,360,480), dtype='i8')
+                                                     (nb_sample,img_height,img_width), dtype='i8')
             y_true_dset = y_file.create_dataset("y_true_dataset",
-                                                     (nb_sample,360,480), dtype='i8')
+                                                     (nb_sample,img_height,img_width), dtype='i8')
 
 
-            print('\ny_pred_dset at the beginning')
-            print(type(y_pred_dset))
-            print(y_pred_dset.shape)
-            print(y_pred_dset.dtype)
+            #print('\ny_pred_dset at the beginning')
+            #print(type(y_pred_dset))
+            #print(y_pred_dset.shape)
+            #print(y_pred_dset.dtype)
 
 
             ## ----- CREATE hdf5 FILE TO SAVE THE SOFTMAX PREDICTIONS  -----
@@ -338,46 +373,68 @@ class One_Net_Model(Model):
             #                                         (nb_sample,360,480,11), dtype='float32')
             ## ACHTUNG: for SE, it will have to be dtype='f32'
 
-            y_softmax = np.zeros((nb_models,nb_sample,360,480,11), dtype='float32')
 
-            #print('\ny_softmax_dset')
-            #print(type(y_softmax_dset))
-            #print(y_softmax_dset.shape)
-            #print(y_softmax_dset.dtype)
+            classes_dict = self.cf.dataset.classes
+            print('a')
+            print(len(classes_dict))
 
-            ## ----- LOAD MODEL WEIGHTS -----
+            if 'void' in classes_dict.values():
+                keys_dict = {v: k for k, v in classes_dict.iteritems()}
+                key_void = keys_dict['void']
+
+                classes_dict = {x: classes_dict[x] for x in classes_dict if classes_dict[x] != 'void'}
+
+            nb_classes = len(classes_dict)
+
+            print(nb_classes)
+
+            y_softmax = np.zeros((nb_models,nb_sample,img_height,img_width,11), dtype='float32')
+
+            print('\ny_softmax')
+            print(type(y_softmax))
+            print(y_softmax.shape)
+            print(y_softmax.dtype)
+
+
+            quit()
+            ## ----- LOAD MODEL WEIGHTS AND PREDICT-----
+            print('Loading model weights, and predicting')
             i = 0
             for model_file in model_list:
                 test_gen.reset()
                 # Load best trained model (or last? see camvid.py)
-                print('Loading model ' + model_file + '...')
+                print('  Loading model ' + model_file)
                 weights_fl = os.path.join(self.cf.savepath_SE_weights, model_file)
                 self.model.load_weights(weights_fl)
 
-                print('Predicting with ' + model_file + '...')
+                print('  Predicting with ' + model_file)
                 y_softmax[i] = self.model.predict_generator(test_gen, val_samples=nb_sample,
                             max_q_size=10, nb_worker=1, pickle_safe=False)
                             #this combination works, not clear why
                 i += 1
 
 
-            print('\ny_softmax right after prediction')
-            print(type(y_softmax))
-            print(y_softmax.shape)
-            print(y_softmax.dtype)
+            #print('\ny_softmax right after prediction')
+            #print(type(y_softmax))
+            #print(y_softmax.shape)
+            #print(y_softmax.dtype)
             #print(y_pred)
 
-            w = np.ones((nb_models),dtype='int8')
+            # model weights
+            w = np.array(self.cf.SE_model_weights)
+
+            eps = 0.00001
+            if (len(w)!=nb_models or not (np.sum(w)<1+eps and np.sum(w)>1-eps)):
+                raise Exception('Model weights are incorrect')
+
             y_softmax = np.average(y_softmax, axis=0, weights=w)
 
-            print('\ny_softmax after average')
-            print(type(y_softmax))
-            print(y_softmax.shape)
-            print(y_softmax.dtype)
-            #print(y_pred)
+            #print('\ny_softmax after average')
+            #print(type(y_softmax))
+            #print(y_softmax.shape)
+            #print(y_softmax.dtype)
 
             y_pred = y_softmax
-
 
             # Compute the y_pred argmax
             if K.image_dim_ordering() == 'th':
@@ -386,23 +443,23 @@ class One_Net_Model(Model):
                 y_pred = np.argmax(y_pred, axis=3)
 
 
-            print('\ny_pred after argmax')
-            print(type(y_pred))
-            print(y_pred.shape)
-            print(y_pred.dtype)
+            #print('\ny_pred after argmax')
+            #print(type(y_pred))
+            #print(y_pred.shape)
+            #print(y_pred.dtype)
 
             ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
-
+            print('Saving predictions')
             y_pred_dset[:] = y_pred[:]
 
-            print('\ny_pred_dset after assignment of y_pred')
-            print(type(y_pred_dset))
-            print(y_pred_dset.shape)
-            print(y_pred_dset.dtype)
+            #print('\ny_pred_dset after assignment of y_pred')
+            #print(type(y_pred_dset))
+            #print(y_pred_dset.shape)
+            #print(y_pred_dset.dtype)
 
 
             ## ----- LOAD x_true AND y_true IN BATCHES FROM enqueuer -----
-
+            print('\nLoading x_true and y_true from enqueuer..')
             ## reset to restart from first batch
             test_gen.reset()
 
@@ -418,8 +475,8 @@ class One_Net_Model(Model):
             else:
                 raise ValueError('Unknown data generator tag')
 
-            y_true = np.zeros((nb_sample,360,480), dtype='int8')
-            x_true = np.zeros((nb_sample,360,480,3), dtype='float32')
+            y_true = np.zeros((nb_sample,img_height,img_width), dtype='int8')
+            x_true = np.zeros((nb_sample,img_height,img_width,3), dtype='float32')
 
             # Process the dataset
             nb_iterations = int(math.ceil(nb_sample/float(batch_size)))
@@ -445,20 +502,19 @@ class One_Net_Model(Model):
                         time.sleep(0.05)
 
                 x_true_batch = data[0]
-                print('\nx_true_batch')
-                print(type(x_true_batch))
-                print(x_true_batch.shape)
-                #print(x_true_batch)
+                #print('\nx_true_batch')
+                #print(type(x_true_batch))
+                #print(x_true_batch.shape)
 
                 y_true_batch = data[1].astype('int32')
-                print('\ny_true_batch before squeeze')
-                print(type(y_true_batch))
-                print(y_true_batch.shape)
+                #print('\ny_true_batch before squeeze')
+                #print(type(y_true_batch))
+                #print(y_true_batch.shape)
 
                 y_true_batch = np.squeeze(y_true_batch, axis=3)
-                print('\ny_true_batch after squeeze')
-                print(type(y_true_batch))
-                print(y_true_batch.shape)
+                #print('\ny_true_batch after squeeze')
+                #print(type(y_true_batch))
+                #print(y_true_batch.shape)
 
                 # Reshape y_true_batch
                 if K.image_dim_ordering() == 'th':
@@ -468,10 +524,10 @@ class One_Net_Model(Model):
                     y_true_batch = np.reshape(y_true_batch, (y_true_batch.shape[0], y_true_batch.shape[1],
                                                  y_true_batch.shape[2]))
 
-                print('\ny_true_batch after reshape')
-                print(type(y_true_batch))
-                print(y_true_batch.shape)
-                print(y_true_batch.dtype)
+                #print('\ny_true_batch after reshape')
+                #print(type(y_true_batch))
+                #print(y_true_batch.shape)
+                #print(y_true_batch.dtype)
 
                 y_true[_*batch_size : (_*batch_size+len(y_true_batch))] = y_true_batch
                 x_true[_*batch_size : (_*batch_size+len(x_true_batch))] = x_true_batch
@@ -480,13 +536,13 @@ class One_Net_Model(Model):
                 if (_ < nb_iterations-1):
                     test_gen.next()
 
-
+            print('Saving y_true')
             y_true_dset[:] = y_true[:]
 
-            print('\ny_true_dset after assignment of y_true')
-            print(type(y_true_dset))
-            print(y_true_dset.shape)
-            print(y_true_dset.dtype)
+            #print('\ny_true_dset after assignment of y_true')
+            #print(type(y_true_dset))
+            #print(y_true_dset.shape)
+            #print(y_true_dset.dtype)
 
             ## close h5py file (and save it)
             y_file.close()
@@ -495,22 +551,35 @@ class One_Net_Model(Model):
             if enqueuer is not None:
                 enqueuer.stop()
 
+
+
+
+            if (tag_gen == 'valid_gen'):
+                img_savepath = self.cf.savepath_pred_SE_valid_gen
+            elif (tag_gen == 'test_gen'):
+                img_savepath = self.cf.savepath_pred_SE_test_gen
+            else:
+                raise ValueError('Unknown data generator tag')
+
+
+
             ## ----- SAVE PREDICTIONS AS IMAGES -----
-            print('Saving prediction images..')
+            print('\nSaving prediction images..')
             # Save output images
             save_img3(image_batch=x_true, mask_batch=y_true, output=y_pred,
-                      out_images_folder=self.cf.savepath_pred_SE, epoch=-1,
+                      out_images_folder=img_savepath, epoch=-1,
                       color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
                       tag=tag, void_label=self.cf.dataset.void_class, n_legend_rows=1,
                       tag2='prediction_images')
 
+    print('\nSE prediction of ' + tag_gen + ' terminated')
 
 
 
     # Test the model
     def test(self, test_gen, tag='', tag_gen=''):
-        if self.cf.test_model:
-            print('\n > Testing the model...')
+        if (self.cf.test_model or self.cf.SE_test_model):
+            print('\n > ' + tag + '-testing the model with ' + tag_gen)
             test_gen.reset()
 
             ## get number of images in dataset
@@ -518,12 +587,12 @@ class One_Net_Model(Model):
 
             ## ----- Load y_pred and y_true from the hdf5 file -----
 
-            print('\nLoading data...\n')
+            print('\nLoading data...')
 
             if tag=='test_SE':
-                y_file = h5py.File(self.cf.real_savepath + "/y_file_SE.hdf5", 'r')
+                y_file = h5py.File(self.cf.real_savepath + "/y_file_SE_" + tag_gen +".hdf5", 'r')
             else:
-                y_file = h5py.File(self.cf.real_savepath + "/y_file.hdf5", 'r')
+                y_file = h5py.File(self.cf.real_savepath + "/y_file_" + tag_gen +".hdf5", 'r')
 
 
             y_pred_dset = y_file['.']['y_pred_dataset'].value
@@ -562,18 +631,34 @@ class One_Net_Model(Model):
             #from sklearn.metrics import jaccard_similarity_score
             #from sklearn.metrics import accuracy_score
             from sklearn.metrics import confusion_matrix
-
+            from sklearn.metrics import classification_report
             #acc = accuracy_score(y_true.flatten(), y_pred.flatten(), normalize=True)
             #jac = jaccard_similarity_score(y_true.flatten(), y_pred.flatten(), normalize=True)
 
-            confusion_matr = confusion_matrix(y_true.flatten(), y_pred.flatten())
-            #print(confusion_matr)
 
-            nb_classes = len(self.cf.dataset.classes)
             classes_dict = self.cf.dataset.classes
+            confusion_matr = confusion_matrix(y_true.flatten(), y_pred.flatten())
 
-            acc_percl = np.zeros((nb_classes), dtype='float32')
-            jacc_percl = np.zeros((nb_classes), dtype='float32')
+
+            if 'void' in classes_dict.values():
+                keys_dict = {v: k for k, v in classes_dict.iteritems()}
+                key_void = keys_dict['void']
+
+                confusion_matr = np.delete(confusion_matr, key_void, 0)
+                confusion_matr = np.delete(confusion_matr, key_void, 1)
+
+                classes_dict = {x: classes_dict[x] for x in classes_dict if classes_dict[x] != 'void'}
+
+            #report = classification_report(y_true.flatten(), y_pred.flatten(), [0,1,2,3,4,5,6,7,8,9,10], classes_dict.values())
+
+
+            nb_classes = len(classes_dict)
+
+            ## Compute true positive, true negative, etc
+            TP = np.zeros((nb_classes), dtype='int')
+            TN = np.zeros((nb_classes), dtype='int')
+            FP = np.zeros((nb_classes), dtype='int')
+            FN = np.zeros((nb_classes), dtype='int')
 
             sum_rows = np.sum(confusion_matr, axis=1)
             sum_columns = np.sum(confusion_matr, axis=0)
@@ -587,43 +672,80 @@ class One_Net_Model(Model):
             #print(sum_columns)
 
             for i in range(nb_classes):
-                I = confusion_matr[i][i]
+                TP[i] = confusion_matr[i][i]
+                TN[i] = np.sum(confusion_matr) - sum_rows[i] - sum_columns[i] + TP[i]
+                FP[i] = sum_columns[i] - TP[i]
+                FN[i] = sum_rows[i] - TP[i]
 
-                den_acc = sum_rows[i]
-                acc_percl[i] = float(I)/(den_acc)
+            # Compute metrics
+            acc_percl = np.zeros((nb_classes), dtype='float32')
+            jacc_percl = np.zeros((nb_classes), dtype='float32')
+            recall_percl =  np.zeros((nb_classes), dtype='float32')
+            precision_percl =  np.zeros((nb_classes), dtype='float32')
 
-                den_jacc = sum_rows[i] + sum_columns[i] - I
-                jacc_percl[i] = float(I)/(den_jacc)
+            acc_percl = (TP+TN)/(TP+TN+FP+FN).astype(float)
+            jacc_percl = TP/(TP+FN+FP).astype(float)
+            recall_percl = TP/(TP+FN).astype(float)
+            precision_percl = TP/(TP+FP).astype(float)
 
+            # Set to 0 possible NaN elements
+            acc_percl[np.isnan(acc_percl)] = 0.
+            jacc_percl[np.isnan(jacc_percl)] = 0.
+            recall_percl[np.isnan(recall_percl)] = 0.
+            precision_percl[np.isnan(precision_percl)] = 0.
+
+            # Compute metrics means
+            acc_mean = np.nanmean(acc_percl)
+            jacc_mean = np.nanmean(jacc_percl)
+            recall_mean = np.nanmean(recall_percl)
+            precision_mean = np.nanmean(precision_percl)
+
+            if tag=='test_SE':
+                file_results = '/SE_Model_results_' + tag_gen + '.txt'
+                w = str(self.cf.SE_model_weights)
+            else:
+                file_results = '/single_Model_results_' + tag_gen + '.txt'
+                w = 'We are testing a single model'
+
+
+            # Print the results
+            print('\t\t\tJaccard\t  accur\t  precis\t  recall')
             for i in range(nb_classes):
-                print('   {:2d} ({:^15}): Jacc: {:6.2f}  Acc: {:6.2f}'.format(i,
+                print('   {:2d} ({:^15}): {:6.2f}    {:6.2f}    {:6.2f}    {:6.2f}'.format(i,
                                                                  classes_dict[i],
                                                                  jacc_percl[i]*100,
-                                                                 acc_percl[i]*100))
-
-            # Compute jaccard and accuracy mean
-            jacc_mean = np.nanmean(jacc_percl)
-            acc_mean = np.nanmean(acc_percl)
+                                                                 acc_percl[i]*100,
+                                                                 precision_percl[i]*100,
+                                                                 recall_percl[i]*100))
 
             print('\n   Jaccard mean:  {}'.format(jacc_mean))
             print('   Accuracy mean: {}\n'.format(acc_mean))
+            print('   Precision mean: {}\n'.format(precision_mean))
+            print('   Recall mean: {}\n'.format(recall_mean))
+
+            #print('\n\nClassification Report\n')
+            #print(report)
+            print('\n\nModels weights: {}\n'.format(w))
 
 
-
-            if tag=='test_SE':
-                file_results = '/SE_Model_test_results.txt'
-            else:
-                file_results = '/single_Model_test_results.txt'
-
-
+            # Save the results
             with open(self.cf.real_savepath + file_results, 'w') as f:
+                f.write('\t\t\tJaccard\t  accur\t  precis\t  recall\n')
                 for i in range(nb_classes):
-                    f.write('   {:2d} ({:^15}): Jacc: {:6.2f}  Acc: {:6.2f}\n'.format(i,
+                    f.write('   {:2d} ({:^15}): {:6.2f}    {:6.2f}    {:6.2f}    {:6.2f}\n'.format(i,
                                                                      classes_dict[i],
                                                                      jacc_percl[i]*100,
-                                                                     acc_percl[i]*100))
+                                                                     acc_percl[i]*100,
+                                                                     precision_percl[i]*100,
+                                                                     recall_percl[i]*100))
                 f.write('\n   Jaccard mean:  {}\n'.format(jacc_mean))
                 f.write('   Accuracy mean: {}\n'.format(acc_mean))
+                f.write('   Precision mean: {}\n'.format(precision_mean))
+                f.write('   Recall mean: {}\n'.format(recall_mean))
+
+                #f.write('\n\n\nClassification Report\n')
+                #f.write(report)
+                f.write('\n\nModels weights: {}\n'.format(w))
 
     """
             OLD VERSION

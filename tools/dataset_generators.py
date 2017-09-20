@@ -125,7 +125,7 @@ class Dataset_Generators():
             train_gen = None
             valid_gen = None
 
-        if cf.test_model or cf.pred_model or cf.SE_pred_model:
+        if cf.pred_model or cf.test_model or cf.SE_pred_model or cf.SE_test_model:
             # Load testing set
             print ('\n > Reading testing set...')
             dg_ts = ImageDataGenerator(imageNet=cf.norm_imageNet_preprocess,

@@ -64,7 +64,7 @@ class Configuration():
 
 
         ## Create output folder for the images saved during training
-        cf.savepath_images_during_train = os.path.join(cf.savepath, 'images_during_training')
+        cf.savepath_images_during_train = os.path.join(cf.savepath, 'validation_images_during_training')
         if not os.path.exists(cf.savepath_images_during_train):
             os.makedirs(cf.savepath_images_during_train)
 
@@ -73,7 +73,7 @@ class Configuration():
             cf.savepath_SE_weights = os.path.join(cf.savepath, 'SE_weights')
             if not os.path.exists(cf.savepath_SE_weights):
                 os.makedirs(cf.savepath_SE_weights)
-        elif (cf.SE_pred_model):
+        elif (cf.SE_pred_model or cf.SE_test_model):
             cf.savepath_SE_weights = os.path.join(cf.real_savepath, 'SE_weights')
 
 
@@ -84,14 +84,22 @@ class Configuration():
 
         ## Create folder for prediction images
         if (cf.pred_model):
-            cf.savepath_pred = os.path.join(cf.real_savepath, 'prediction_images')
-            if not os.path.exists(cf.savepath_pred):
-                os.makedirs(cf.savepath_pred)
+            cf.savepath_pred_valid_gen = os.path.join(cf.real_savepath, 'prediction_images_valid_gen')
+            cf.savepath_pred_test_gen = os.path.join(cf.real_savepath, 'prediction_images_test_gen')
+
+            if not os.path.exists(cf.savepath_pred_valid_gen):
+                os.makedirs(cf.savepath_pred_valid_gen)
+            if not os.path.exists(cf.savepath_pred_test_gen):
+                os.makedirs(cf.savepath_pred_test_gen)
 
         if (cf.SE_pred_model):
-            cf.savepath_pred_SE = os.path.join(cf.real_savepath, 'prediction_images_SE')
-            if not os.path.exists(cf.savepath_pred_SE):
-                os.makedirs(cf.savepath_pred_SE)
+            cf.savepath_pred_SE_valid_gen = os.path.join(cf.real_savepath, 'prediction_images_SE_valid_gen')
+            cf.savepath_pred_SE_test_gen = os.path.join(cf.real_savepath, 'prediction_images_SE_test_gen')
+
+            if not os.path.exists(cf.savepath_pred_SE_valid_gen):
+                os.makedirs(cf.savepath_pred_SE_valid_gen)
+            if not os.path.exists(cf.savepath_pred_SE_test_gen):
+                os.makedirs(cf.savepath_pred_SE_test_gen)
 
 
 

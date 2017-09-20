@@ -55,31 +55,31 @@ def process(configuration):
                 model.train(train_gen, valid_gen, cb)
             else:
                 raise ValueError('Unknown data format')
-            print ('	Training time: ' + str(time.time()-start_train))
+            print ('\nTraining time: ' + str( int((time.time()-start_train)/60. )) + ' minutes')
 
         if cf.pred_model:
             # Compute validation metrics
-            model.predict(valid_gen, tag='pred', tag_gen='valid_gen')
+            # model.predict(valid_gen, tag='pred', tag_gen='valid_gen')
             # Compute test metrics
-            #model.predict(test_gen, tag='pred', tag_gen='test_gen')
+            model.predict(test_gen, tag='pred', tag_gen='test_gen')
 
         if cf.SE_pred_model:
             # Compute validation metrics
             model.SE_predict(valid_gen, tag='SE_pred', tag_gen='valid_gen')
             # Compute test metrics
-            #model.SE_predict(test_gen, tag='SE_pred', tag_gen='test_gen')
+            model.SE_predict(test_gen, tag='SE_pred', tag_gen='test_gen')
 
         if cf.test_model:
             # Compute validation metrics
             model.test(valid_gen, tag='test', tag_gen='valid_gen')
             # Compute test metrics
-            #model.test(test_gen, tag='test', tag_gen='test_gen')
+            model.test(test_gen, tag='test', tag_gen='test_gen')
 
         if cf.SE_test_model:
             # Compute validation metrics
             model.test(valid_gen, tag='test_SE', tag_gen='valid_gen')
             # Compute test metrics
-            #model.test(test_gen, tag='test_SE', tag_gen='test_gen')
+            model.test(test_gen, tag='test_SE', tag_gen='test_gen')
 
 
     except KeyboardInterrupt:

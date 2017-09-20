@@ -8,12 +8,14 @@
 
 
 cd ../runs/
-mkdir $2
+rm -rf $2_$3
+sleep 1s
+mkdir $2_$3
 cd ..
-cp -r keras_zoo_SE/ runs/$2/
+cp -r keras_zoo_SE/ runs/$2_$3/
 sleep 2s
-cd runs/$2/keras_zoo_SE/
+cd runs/$2_$3/keras_zoo_SE/
 
 
-CUDA_VISIBLE_DEVICES=$1 python train.py -c config/camvid.py -e $2 -s /home/flucchesi/experiments -l /home/flucchesi/experiments
-#CUDA_VISIBLE_DEVICES=$1 python train.py -c config/camvid.py -e $2 -s /datatmp/flucchesi/experiments -l /datatmp/flucchesi/experiments
+CUDA_VISIBLE_DEVICES=$1 python train.py -c config/cityscapes.py -e $2 -s /home/flucchesi/experiments -l /home/flucchesi/experiments
+#CUDA_VISIBLE_DEVICES=$1 python train.py -c config/cityscapes.py -e $2 -s /datatmp/flucchesi/experiments -l /datatmp/flucchesi/experiments

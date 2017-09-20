@@ -13,18 +13,42 @@ load_imageNet                = False           # Load Imagenet weights and norma
 load_pretrained              = False           # Load a pretrained model for doing finetuning
 weights_file                 = 'weights.hdf5'  # Training weight file name
 
-##
+## ----------------------------------------------------------
 # Parameters
 
 ## To train: activate only train
 ## to predict/test: activate train and predict/test
-train_model                  = True            # Train the model
-pred_model                   = False           # Predict using the model
-test_model                   = False           # Test the model
+train_model                  = False          # Train the model
 
-##
-SE_pred_model                = False           # predict using models from Snapshot Ensemble
-SE_test_model                = False           # test using models from Snapshot Ensemble
+# Single model
+pred_model                   = True       # Predict using the model
+test_model                   = True       # Test the predictions of the model
+
+# SE model
+SE_pred_model                = True       # Predict using already saved models from Snapshot Ensemble
+SE_test_model                = True      # Test using predictions from Snapshot Ensemble
+
+SE_model_weights             = [0.2, 0.2, 0.3, 0.3] #[0.0, 0.0, 0.2, 0.4, 0.4]
+
+# Callback model check point (Single Model)
+checkpoint_enabled           = False            # Enable the Callback
+checkpoint_monitor           = 'val_jaccard'   # Metric to monitor
+checkpoint_mode              = 'max'           # Mode ['max' | 'min']
+##changed to last
+checkpoint_save_best_only    = False            # Save best (True) or last (False) model
+checkpoint_save_weights_only = True            # Save only weights or also model
+checkpoint_verbose           = 0               # Verbosity of the checkpoint
+
+## Callback Snapshot Ensemble during training
+## (activate both: learning rate schedule and snapshot model weights saving)
+SE_enabled                   = False             # Enable the callbacks
+SE_n_models                  = 5                # Number of snapshot models
+
+# Training parameters
+optimizer                    = 'sgd'          # Optimizer
+learning_rate                = 0.0001          # Training learning rate
+weight_decay                 = 0.              # Weight decay or L2 parameter norm penalty
+n_epochs                     = 200 ##1000            # Number of epochs during training
 
 ##
 # Debug
@@ -35,55 +59,42 @@ debug_images_test            = 10 #30              # N images for testing in deb
 debug_n_epochs               = 2 #2             # N of training epochs in debug mode
 
 # Batch sizes
-batch_size_train             = 3 ##2               # Batch size during training ##means, for training set
+batch_size_train             = 5 ##2               # Batch size during training ##means, for training set
 batch_size_valid             = 10              # Batch size during validation
 batch_size_test              = 10              # Batch size during testing
 crop_size_train              = None # (256, 256)      # Crop size during training (Height, Width) or None
 crop_size_valid              = None            # Crop size during validation
 crop_size_test               = None            # Crop size during testing
-resize_train                 = None            # Resize the image during training (Height, Width) or None
-resize_valid                 = None            # Resize the image during validation
-resize_test                  = None            # Resize the image during testing
+resize_train                 = None #(270,360)  #None #         # Resize the image during training (Height, Width) or None (cv 360,480) (270,360) (180,240)
+resize_valid                 = None #(270,360)  #None           # Resize the image during validation
+resize_test                  = None #(270,360)   #None          # Resize the image during testing
 
 # Data shuffle
-## To actually shuffle, we need seed=False (see class Iterator in keras.preprocessing.image), otherwise with fixed seed we get the same permutation
+## To actually shuffle, we need seed=False (see class Iterator in keras.preprocessing.image), otherwise with fixed seed we get the same data permutation
 shuffle_train                = True            # Whether to shuffle the training data
 shuffle_valid                = False           # Whether to shuffle the validation data
 shuffle_test                 = False           # Whether to shuffle the testing data
 seed_train                   = 1924            # Random seed for the training shuffle
 seed_valid                   = 1924            # Random seed for the validation shuffle
 seed_test                    = 1924            # Random seed for the testing shuffle
+
 max_q_size                   = 10              # Maximum size for the data generator queue
 workers                      = 5               # Maximum number of processes to spin up when using process based threading
 
-##
-# Training parameters
-optimizer                    = 'sgd'          # Optimizer
-learning_rate                = 0.1          # Training learning rate
-weight_decay                 = 0.              # Weight decay or L2 parameter norm penalty
-n_epochs                     = 300##1000            # Number of epochs during training
+## ------------ MORE CALLBACKS ------------
 
 # Callback save results
 save_results_enabled         = True            # Enable the Callback
-save_results_nsamples        = 5               # Number of samples to save ## ??
+save_results_nsamples        = 5               # Number of samples to save ## Actually it means "save nsamples/batch_size batches per epoch"
 save_results_batch_size      = 5               # Size of the batch
 save_results_n_legend_rows   = 1               # Number of rows when showwing the legend
 
 # Callback early stoping
-earlyStopping_enabled        = False##True           # Enable the Callback
+earlyStopping_enabled        = False ##True    # Enable the Callback
 earlyStopping_monitor        = 'val_jaccard'   # Metric to monitor
 earlyStopping_mode           = 'max'           # Mode ['max' | 'min']
 earlyStopping_patience       = 100             # Max patience for the early stopping
 earlyStopping_verbose        = 0               # Verbosity of the early stopping
-
-# Callback model check point
-checkpoint_enabled           = True            # Enable the Callback
-checkpoint_monitor           = 'val_jaccard'   # Metric to monitor
-checkpoint_mode              = 'max'           # Mode ['max' | 'min']
-##changed to last
-checkpoint_save_best_only    = False            # Save best or last model
-checkpoint_save_weights_only = True            # Save only weights or also model
-checkpoint_verbose           = 0               # Verbosity of the checkpoint
 
 # Callback plot
 plotHist_enabled             = True           # Enable the Callback
@@ -98,11 +109,6 @@ LRScheduler_decay            = 0.1              # Decay for 'step' method
 LRScheduler_S                = 10000            # Step for the 'step' method
 LRScheduler_power            = 0.9              # Power for te poly method
 
-##
-# Callback Snapshot Ensemble
-SE_enabled                   = False             # Enable the callbacks (both: learning rate schedule and snapshot model weights saving)
-SE_n_models                  = 5                # Number of snapshot models
-
 # Callback TensorBoard
 TensorBoard_enabled          = True             # Enable the Callback
 TensorBoard_logs_folder      = None             # Logs folder. If None it would make /home/youruser/TensorBoardLogs/. Either put a regular path.
@@ -110,10 +116,12 @@ TensorBoard_histogram_freq   = 1                # Frequency (in epochs) at which
 TensorBoard_write_graph      = True             # Whether to visualize the graph in Tensorboard. The log file can become quite large when write_graph is set to True.
 TensorBoard_write_images     = False            # Whether to write model weights to visualize as image in Tensorboard.
 
+## ------------ DATA AUGMENTATION AND PREPROCESSING ------------
+
 # Data augmentation for training and normalization
-norm_imageNet_preprocess           = True  # Normalize following imagenet procedure
+norm_imageNet_preprocess           = True#True  # Normalize following imagenet procedure
 norm_fit_dataset                   = False   # If True it recompute std and mean from images. Either it uses the std and mean set at the dataset config file
-norm_rescale                       = 1 #1/255. # Scalar to divide and set range 0-1
+norm_rescale                       = 1#1/255.#1/255. # Scalar to divide and set range 0-1
 norm_featurewise_center            = False   # Substract mean - dataset
 norm_featurewise_std_normalization = False   # Divide std - dataset
 norm_samplewise_center             = False  # Substract mean - sample
@@ -137,3 +145,27 @@ da_spline_warp                     = False  # Enable elastic deformation
 da_warp_sigma                      = 10     # Elastic deformation sigma
 da_warp_grid_size                  = 3      # Elastic deformation gridSize
 da_save_to_dir                     = False  # Save the images for debuging
+
+
+## ------------ CHECKS ------------
+
+#if ( (pred_model or test_model) and (SE_pred_model or SE_test_model) ):
+#    raise Exception('It is possible to predict/test a single model XOR an ensemble model')
+
+if ( train_model and (checkpoint_enabled == SE_enabled) ):
+    raise Exception('During a train, better save snapshot models XOR best/last single model, to avoid confusion')
+
+if ( train_model and (pred_model or test_model) and not checkpoint_enabled ):
+    raise Exception('When training single model, you need checkpoint_enabled')
+
+if ( train_model and (SE_pred_model or SE_test_model) and not SE_enabled ):
+    raise Exception('When training ensemble model, you need SE_enabled')
+
+if ( LRScheduler_enabled and SE_enabled):
+    raise Exception('LRScheduler_enabled and SE_enabled are not compatible')
+
+eps = 0.00001
+if ( (train_model and SE_pred_model) and
+                                        (SE_n_models!=len(SE_model_weights) or not
+                                        (sum(SE_model_weights)<1+eps and sum(SE_model_weights)>1-eps))):
+    raise Exception('Model weights are incorrect')

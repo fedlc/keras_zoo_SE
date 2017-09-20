@@ -93,7 +93,7 @@ class Callbacks_Factory():
 
 
         ## Snapshot Ensembling callback
-        if cf.SE_enabled:
+        if cf.SE_enabled and cf.train_model:
             print('   Snapshot Ensembling')
 
             #cosine annealing learning rate callback
