@@ -401,10 +401,10 @@ class One_Net_Model(Model):
             ## ----- CREATE hdf5 FILE TO SAVE THE SOFTMAX PREDICTIONS  -----
 
             ## create hdf5 file to save the predictions and the gt, to use them when testing
-            #y_softmax_file = h5py.File(self.cf.real_savepath + "/y_softmax_file.hdf5", "w")
+            #y_pred_file = h5py.File(self.cf.real_savepath + "/y_pred_file.hdf5", "w")
 
             ## create datasets to save predictions and gt
-            #y_softmax_dset = y_softmax_file.create_dataset("y_softmax_dataset",
+            #y_pred_dset = y_pred_file.create_dataset("y_pred_dataset",
             #                                         (nb_sample,360,480,11), dtype='float32')
             ## ACHTUNG: for SE, it will have to be dtype='f32'
 
@@ -424,12 +424,12 @@ class One_Net_Model(Model):
             #print(nb_classes)
 
             #prova con concatenate
-            y_softmax = np.zeros((nb_models,nb_sample,img_height,img_width,nb_classes), dtype='float32')
+            y_pred = np.zeros((nb_models,nb_sample,img_height,img_width,nb_classes), dtype='float32')
 
-            print('\ny_softmax')
-            print(type(y_softmax))
-            print(y_softmax.shape)
-            print(y_softmax.dtype)
+            print('\ny_pred')
+            print(type(y_pred))
+            print(y_pred.shape)
+            print(y_pred.dtype)
 
 
             ## ----- LOAD MODEL WEIGHTS AND PREDICT-----
@@ -445,20 +445,20 @@ class One_Net_Model(Model):
 
                 print('  Predicting with ' + model_file)
                 checking_time = time.time()
-                y_softmax[i] = self.model.predict_generator(test_gen, val_samples=nb_sample,
+                y_pred[i] = self.model.predict_generator(test_gen, val_samples=nb_sample,
                             max_q_size=10, nb_worker=1, pickle_safe=False)
                             #this combination works, not clear why
                 i += 1
                 print ('    time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
 
-            #print('\ny_softmax right after prediction')
-            #print(type(y_softmax))
-            #print(y_softmax.shape)
-            #print(y_softmax.dtype)
+            #print('\ny_pred right after prediction')
+            #print(type(y_pred))
+            #print(y_pred.shape)
+            #print(y_pred.dtype)
             #print(y_pred)
             print('Averaging models predictions')
-
+            checking_time = time.time()
             # model weights
             w = np.array(self.cf.SE_model_weights)
 
@@ -466,23 +466,23 @@ class One_Net_Model(Model):
             if (len(w)!=nb_models or not (np.sum(w)<1+eps and np.sum(w)>1-eps)):
                 raise Exception('Model weights are incorrect')
 
-            y_softmax = np.average(y_softmax, axis=0, weights=w)
+            y_pred = np.average(y_pred, axis=0, weights=w)
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
-            #print('\ny_softmax after average')
-            #print(type(y_softmax))
-            #print(y_softmax.shape)
-            #print(y_softmax.dtype)
+            #print('\ny_pred after average')
+            #print(type(y_pred))
+            #print(y_pred.shape)
+            #print(y_pred.dtype)
 
 
             print('Computing argmax')
-
-            y_pred = y_softmax
-
+            checking_time = time.time()
             # Compute the y_pred argmax
             if K.image_dim_ordering() == 'th':
                 y_pred = np.argmax(y_pred, axis=1)
             else:
                 y_pred = np.argmax(y_pred, axis=3)
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
 
             #print('\ny_pred after argmax')
@@ -492,7 +492,9 @@ class One_Net_Model(Model):
 
             ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
             print('Saving predictions')
+            checking_time = time.time()
             y_pred_dset[:] = y_pred[:]
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
             #print('\ny_pred_dset after assignment of y_pred')
             #print(type(y_pred_dset))
@@ -502,6 +504,9 @@ class One_Net_Model(Model):
 
             ## ----- LOAD x_true AND y_true IN BATCHES FROM enqueuer -----
             print('\nLoading x_true and y_true from enqueuer..')
+            print('  Preparation')
+            checking_time = time.time()
+
             ## reset to restart from first batch
             test_gen.reset()
 
@@ -531,10 +536,7 @@ class One_Net_Model(Model):
             #print("\nenqueuer")
             #print(enqueuer)
 
-
-
-
-
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
             # Process the dataset
             nb_iterations = int(math.ceil(nb_sample/float(batch_size)))
