@@ -22,11 +22,18 @@ train_model                  = False          # Train the model
 
 # Single model
 pred_model                   = True       # Predict using the model
-test_model                   = True       # Test the predictions of the model
+test_model                   = False       # Test the predictions of the model
 
 # SE model
-SE_pred_model                = True       # Predict using already saved models from Snapshot Ensemble
-SE_test_model                = True      # Test using predictions from Snapshot Ensemble
+SE_pred_model                = False       # Predict using already saved models from Snapshot Ensemble
+SE_test_model                = False      # Test using predictions from Snapshot Ensemble
+
+#dataset to use for prediction and test
+validation_set               = True
+test_set                     = True
+
+# number of prediction images to save
+nb_pred_images_to_save       = 20
 
 SE_model_weights             = [0.2, 0.2, 0.3, 0.3] #[0.0, 0.0, 0.2, 0.4, 0.4]
 
@@ -119,9 +126,9 @@ TensorBoard_write_images     = False            # Whether to write model weights
 ## ------------ DATA AUGMENTATION AND PREPROCESSING ------------
 
 # Data augmentation for training and normalization
-norm_imageNet_preprocess           = True#True  # Normalize following imagenet procedure
+norm_imageNet_preprocess           = False#True  # Normalize following imagenet procedure
 norm_fit_dataset                   = False   # If True it recompute std and mean from images. Either it uses the std and mean set at the dataset config file
-norm_rescale                       = 1#1/255.#1/255. # Scalar to divide and set range 0-1
+norm_rescale                       = 1/255.#1/255. # Scalar to divide and set range 0-1
 norm_featurewise_center            = False   # Substract mean - dataset
 norm_featurewise_std_normalization = False   # Divide std - dataset
 norm_samplewise_center             = False  # Substract mean - sample

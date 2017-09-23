@@ -21,17 +21,26 @@ weights_file                 = 'weights.hdf5'  # Training weight file name
 train_model                  = False          # Train the model
 
 # Single model
-pred_model                   = True       # Predict using the model
+pred_model                   = False       # Predict using the model
 test_model                   = False       # Test the predictions of the model
 
 # SE model
-SE_pred_model                = False       # Predict using already saved models from Snapshot Ensemble
+SE_pred_model                = True       # Predict using already saved models from Snapshot Ensemble
 SE_test_model                = False      # Test using predictions from Snapshot Ensemble
 
-SE_model_weights             = [0.2, 0.8] #[0.0, 0.0, 0.2, 0.4, 0.4]
+#dataset to use for prediction and test
+validation_set               = False
+test_set                     = True
+
+# number of prediction images to save
+nb_pred_images_to_save       = 20
+
+SE_model_weights             = [0.2, 0.2, 0.2, 0.2, 0.2] #[0.0, 0.0, 0.2, 0.4, 0.4]
+
+
 
 # Callback model check point (Single Model)
-checkpoint_enabled           = True            # Enable the Callback
+checkpoint_enabled           = False            # Enable the Callback
 checkpoint_monitor           = 'val_jaccard'   # Metric to monitor
 checkpoint_mode              = 'max'           # Mode ['max' | 'min']
 ##changed to last
@@ -41,18 +50,18 @@ checkpoint_verbose           = 0               # Verbosity of the checkpoint
 
 ## Callback Snapshot Ensemble during training
 ## (activate both: learning rate schedule and snapshot model weights saving)
-SE_enabled                   = False             # Enable the callbacks
-SE_n_models                  = 2                # Number of snapshot models
+SE_enabled                   = True             # Enable the callbacks
+SE_n_models                  = 5                # Number of snapshot models
 
 # Training parameters
 optimizer                    = 'sgd'          # Optimizer
 learning_rate                = 0.0001          # Training learning rate
 weight_decay                 = 0.  #  0.0005     # Weight decay or L2 parameter norm penalty
-n_epochs                     = 2             # Number of epochs during training
+n_epochs                     = 10             # Number of epochs during training
 
 ##
 # Debug
-debug                        = True            # Use only few images for debuging
+debug                        = False            # Use only few images for debuging
 debug_images_train           = 20              # N images for training in debug mode (-1 means all)
 debug_images_valid           = 10              # N images for validation in debug mode (-1 means all)
 debug_images_test            = 10              # N images for testing in debug mode (-1 means all)

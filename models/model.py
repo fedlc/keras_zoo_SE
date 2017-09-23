@@ -10,6 +10,7 @@ from keras import backend as K
 
 ##
 import h5py
+import gc ## garbage collector
 
 # Keras dim orders
 def channel_idx():
@@ -124,6 +125,8 @@ class One_Net_Model(Model):
     def predict(self, test_gen, tag='pred', tag_gen=''):
         if self.cf.pred_model:
             print('\n > Predicting the single model using ' + tag_gen)
+            checking_time_pred = time.time()
+
             test_gen.reset()
 
             #print("test_gen")
@@ -164,15 +167,18 @@ class One_Net_Model(Model):
 
 
             ## ----- LOAD MODEL WEIGHTS -----
-            print('Loading model weights')
+            print('\nLoading model weights')
             # Load best trained model (or last? see camvid.py)
             weights_fl = os.path.join(self.cf.real_savepath, "weights.hdf5")
             self.model.load_weights(weights_fl)
 
-            print('Predicting..')
+            ## ----- PREDICT -----
+            print('\nPredicting..')
+            checking_time = time.time()
             y_pred = self.model.predict_generator(test_gen, val_samples=nb_sample,
                                 max_q_size=10, nb_worker=1, pickle_safe=False)
                                 #this combination works, not clear why
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
             #print('\ny_pred right after prediction')
             #print(type(y_pred))
@@ -192,7 +198,7 @@ class One_Net_Model(Model):
             #print(y_pred.dtype)
 
             ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
-            print('Saving predictions')
+            print('\nSaving predictions in hdf5 file')
             y_pred_dset[:] = y_pred[:]
 
             #print('\ny_pred_dset after assignment of y_pred')
@@ -221,17 +227,30 @@ class One_Net_Model(Model):
             y_true = np.zeros((nb_sample,img_height,img_width), dtype='int8')
             x_true = np.zeros((nb_sample,img_height,img_width,3), dtype='float32')
 
+
+
+
+
+            enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
+            #print("\nenqueuer")
+            #print(enqueuer)
+
+
+
+
+
             # Process the dataset
             nb_iterations = int(math.ceil(nb_sample/float(batch_size)))
             for _ in range(nb_iterations):
-
+                checking_time = time.time()
                 print("  Iteration " + str(_+1) + '/' + str(nb_iterations))
 
-                enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
-                #print("\nenqueuer")
-                #print(enqueuer)
+                ##here
+
                 enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
-                               wait_time=0.05)
+                           wait_time=0.05)
+
+
 
                 # Get data for this minibatch
                 data = None
@@ -275,25 +294,35 @@ class One_Net_Model(Model):
                 y_true[_*batch_size : (_*batch_size+len(y_true_batch))] = y_true_batch
                 x_true[_*batch_size : (_*batch_size+len(x_true_batch))] = x_true_batch
 
+
+
+                # Stop data generator
+                if enqueuer is not None:
+                    enqueuer.stop()
+                del(y_true_batch)
+                del(x_true_batch)
+                #gc.collect()
+
                 ## go to next batch
                 if (_ < nb_iterations-1):
                     test_gen.next()
 
-            print('Saving y_true')
-            y_true_dset[:] = y_true[:]
+                print ('    time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
+            print('\nSaving y_true in hdf5 file')
+            checking_time = time.time()
+            y_true_dset[:] = y_true[:]
+            ## close hdf5 file (and save it)
+            y_file.close()
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
             #print('\ny_true_dset after assignment of y_true')
             #print(type(y_true_dset))
             #print(y_true_dset.shape)
             #print(y_true_dset.dtype)
 
-            ## close h5py file (and save it)
-            y_file.close()
 
-            # Stop data generator
-            if enqueuer is not None:
-                enqueuer.stop()
 
+            #enq stop here
 
             if (tag_gen == 'valid_gen'):
                 img_savepath = self.cf.savepath_pred_valid_gen
@@ -305,21 +334,27 @@ class One_Net_Model(Model):
 
 
             ## ----- SAVE PREDICTIONS AS IMAGES -----
-            print('\nSaving prediction images..')
+            print('\nSaving ' + str(self.cf.nb_pred_images_to_save) + ' prediction images..')
+            checking_time = time.time()
             # Save output images
-            save_img3(image_batch=x_true, mask_batch=y_true, output=y_pred,
+            nb_save = self.cf.nb_pred_images_to_save
+            save_img3(image_batch=x_true[0:nb_save], mask_batch=y_true[0:nb_save], output=y_pred[0:nb_save],
                       out_images_folder=img_savepath, epoch=-1,
                       color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
                       tag=tag, void_label=self.cf.dataset.void_class, n_legend_rows=1,
                       tag2='prediction_images')
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
-    print('\nSingle model prediction of ' + tag_gen + ' terminated')
+        print('\nSingle model prediction of ' + tag_gen + ' terminated')
+        print ('  time: ' + str( int(time.time()-checking_time_pred)) + ' seconds')
+
 
 
     ##
     def SE_predict(self, test_gen, tag='SE_pred', tag_gen=''):
         if self.cf.SE_pred_model:
             print('\n > Snapshot Ensembling predictions')
+            checking_time_pred = time.time()
 
             test_gen.reset()
 
@@ -375,8 +410,8 @@ class One_Net_Model(Model):
 
 
             classes_dict = self.cf.dataset.classes
-            print('a')
-            print(len(classes_dict))
+            #print('a')
+            #print(len(classes_dict))
 
             if 'void' in classes_dict.values():
                 keys_dict = {v: k for k, v in classes_dict.iteritems()}
@@ -386,9 +421,10 @@ class One_Net_Model(Model):
 
             nb_classes = len(classes_dict)
 
-            print(nb_classes)
+            #print(nb_classes)
 
-            y_softmax = np.zeros((nb_models,nb_sample,img_height,img_width,11), dtype='float32')
+            #prova con concatenate
+            y_softmax = np.zeros((nb_models,nb_sample,img_height,img_width,nb_classes), dtype='float32')
 
             print('\ny_softmax')
             print(type(y_softmax))
@@ -396,9 +432,9 @@ class One_Net_Model(Model):
             print(y_softmax.dtype)
 
 
-            quit()
             ## ----- LOAD MODEL WEIGHTS AND PREDICT-----
             print('Loading model weights, and predicting')
+
             i = 0
             for model_file in model_list:
                 test_gen.reset()
@@ -408,10 +444,12 @@ class One_Net_Model(Model):
                 self.model.load_weights(weights_fl)
 
                 print('  Predicting with ' + model_file)
+                checking_time = time.time()
                 y_softmax[i] = self.model.predict_generator(test_gen, val_samples=nb_sample,
                             max_q_size=10, nb_worker=1, pickle_safe=False)
                             #this combination works, not clear why
                 i += 1
+                print ('    time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
 
             #print('\ny_softmax right after prediction')
@@ -419,6 +457,7 @@ class One_Net_Model(Model):
             #print(y_softmax.shape)
             #print(y_softmax.dtype)
             #print(y_pred)
+            print('Averaging models predictions')
 
             # model weights
             w = np.array(self.cf.SE_model_weights)
@@ -433,6 +472,9 @@ class One_Net_Model(Model):
             #print(type(y_softmax))
             #print(y_softmax.shape)
             #print(y_softmax.dtype)
+
+
+            print('Computing argmax')
 
             y_pred = y_softmax
 
@@ -478,15 +520,28 @@ class One_Net_Model(Model):
             y_true = np.zeros((nb_sample,img_height,img_width), dtype='int8')
             x_true = np.zeros((nb_sample,img_height,img_width,3), dtype='float32')
 
+
+
+
+
+
+
+
+            enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
+            #print("\nenqueuer")
+            #print(enqueuer)
+
+
+
+
+
+
             # Process the dataset
             nb_iterations = int(math.ceil(nb_sample/float(batch_size)))
             for _ in range(nb_iterations):
+                checking_time = time.time()
+                print("  Iteration " + str(_+1) + '/' + str(nb_iterations))
 
-                print("\n\nIteration " + str(_+1) + '/' + str(nb_iterations))
-
-                enqueuer = GeneratorEnqueuer(test_gen, pickle_safe=True)
-                #print("\nenqueuer")
-                #print(enqueuer)
                 enqueuer.start(nb_worker=nb_worker, max_q_size=max_q_size,
                                wait_time=0.05)
 
@@ -532,24 +587,32 @@ class One_Net_Model(Model):
                 y_true[_*batch_size : (_*batch_size+len(y_true_batch))] = y_true_batch
                 x_true[_*batch_size : (_*batch_size+len(x_true_batch))] = x_true_batch
 
+                # Stop data generator
+                if enqueuer is not None:
+                    enqueuer.stop()
+                del(y_true_batch)
+                del(x_true_batch)
+
                 ## go to next batch
                 if (_ < nb_iterations-1):
                     test_gen.next()
 
-            print('Saving y_true')
+                print ('    time: ' + str( int(time.time()-checking_time)) + ' seconds')
+
+
+            print('\nSaving y_true in hdf5 file')
+            checking_time = time.time()
             y_true_dset[:] = y_true[:]
+            ## close h5py file (and save it)
+            y_file.close()
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
             #print('\ny_true_dset after assignment of y_true')
             #print(type(y_true_dset))
             #print(y_true_dset.shape)
             #print(y_true_dset.dtype)
 
-            ## close h5py file (and save it)
-            y_file.close()
 
-            # Stop data generator
-            if enqueuer is not None:
-                enqueuer.stop()
 
 
 
@@ -564,15 +627,19 @@ class One_Net_Model(Model):
 
 
             ## ----- SAVE PREDICTIONS AS IMAGES -----
-            print('\nSaving prediction images..')
+            print('\nSaving ' + str(self.cf.nb_pred_images_to_save) + ' prediction images..')
+            checking_time = time.time()
+
             # Save output images
-            save_img3(image_batch=x_true, mask_batch=y_true, output=y_pred,
-                      out_images_folder=img_savepath, epoch=-1,
+            nb_save = self.cf.nb_pred_images_to_save
+            save_img3(image_batch=x_true[0:nb_save], mask_batch=y_true[0:nb_save], output=y_pred[0:nb_save],                      out_images_folder=img_savepath, epoch=-1,
                       color_map=self.cf.dataset.color_map, classes=self.cf.dataset.classes,
                       tag=tag, void_label=self.cf.dataset.void_class, n_legend_rows=1,
                       tag2='prediction_images')
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
-    print('\nSE prediction of ' + tag_gen + ' terminated')
+        print('\nSE prediction of ' + tag_gen + ' terminated')
+        print ('  time: ' + str( int(time.time()-checking_time_pred)) + ' seconds')
 
 
 

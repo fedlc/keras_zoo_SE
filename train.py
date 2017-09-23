@@ -59,27 +59,35 @@ def process(configuration):
 
         if cf.pred_model:
             # Compute validation metrics
-            # model.predict(valid_gen, tag='pred', tag_gen='valid_gen')
+            if cf.validation_set:
+                model.predict(valid_gen, tag='pred', tag_gen='valid_gen')
             # Compute test metrics
-            model.predict(test_gen, tag='pred', tag_gen='test_gen')
+            if cf.test_set:
+                model.predict(test_gen, tag='pred', tag_gen='test_gen')
 
         if cf.SE_pred_model:
             # Compute validation metrics
-            model.SE_predict(valid_gen, tag='SE_pred', tag_gen='valid_gen')
+            if cf.validation_set:
+                model.SE_predict(valid_gen, tag='SE_pred', tag_gen='valid_gen')
             # Compute test metrics
-            model.SE_predict(test_gen, tag='SE_pred', tag_gen='test_gen')
+            if cf.test_set:
+                model.SE_predict(test_gen, tag='SE_pred', tag_gen='test_gen')
 
         if cf.test_model:
             # Compute validation metrics
-            model.test(valid_gen, tag='test', tag_gen='valid_gen')
+            if cf.validation_set:
+                model.test(valid_gen, tag='test', tag_gen='valid_gen')
             # Compute test metrics
-            model.test(test_gen, tag='test', tag_gen='test_gen')
+            if cf.test_set:
+                model.test(test_gen, tag='test', tag_gen='test_gen')
 
         if cf.SE_test_model:
             # Compute validation metrics
-            model.test(valid_gen, tag='test_SE', tag_gen='valid_gen')
+            if cf.validation_set:
+                model.test(valid_gen, tag='test_SE', tag_gen='valid_gen')
             # Compute test metrics
-            model.test(test_gen, tag='test_SE', tag_gen='test_gen')
+            if cf.test_set:
+                model.test(test_gen, tag='test_SE', tag_gen='test_gen')
 
 
     except KeyboardInterrupt:
