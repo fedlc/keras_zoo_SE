@@ -21,8 +21,8 @@ weights_file                 = 'weights.hdf5'  # Training weight file name
 train_model                  = False          # Train the model
 
 # Single model
-pred_model                   = True       # Predict using the model
-test_model                   = False       # Test the predictions of the model
+pred_model                   = False       # Predict using the model
+test_model                   = True       # Test the predictions of the model
 
 # SE model
 SE_pred_model                = False       # Predict using already saved models from Snapshot Ensemble
@@ -35,7 +35,7 @@ test_set                     = False
 # number of prediction images to save
 nb_pred_images_to_save       = 20
 
-SE_model_weights             = [0.2, 0.2, 0.2, 0.2, 0.2] #[0.0, 0.0, 0.2, 0.4, 0.4]
+SE_model_weights             = [0.3, 0.35, 0.35] #[0.0, 0.0, 0.2, 0.4, 0.4]
 
 
 
@@ -51,13 +51,13 @@ checkpoint_verbose           = 0               # Verbosity of the checkpoint
 ## Callback Snapshot Ensemble during training
 ## (activate both: learning rate schedule and snapshot model weights saving)
 SE_enabled                   = True             # Enable the callbacks
-SE_n_models                  = 5                # Number of snapshot models
+SE_n_models                  = 3                # Number of snapshot models
 
 # Training parameters
 optimizer                    = 'sgd'          # Optimizer
 learning_rate                = 0.0001          # Training learning rate
 weight_decay                 = 0.  #  0.0005     # Weight decay or L2 parameter norm penalty
-n_epochs                     = 10             # Number of epochs during training
+n_epochs                     = 210             # Number of epochs during training
 
 ##
 # Debug
@@ -68,7 +68,7 @@ debug_images_test            = 10              # N images for testing in debug m
 debug_n_epochs               = 4               # N of training epochs in debug mode
 
 # Batch sizes
-batch_size_train             = 4               # Batch size during training
+batch_size_train             = 5               # Batch size during training
 batch_size_valid             = 10               # Batch size during validation
 batch_size_test              = 10               # Batch size during testing
 crop_size_train              = None #(512, 512)      # Crop size during training (Height, Width) or None
