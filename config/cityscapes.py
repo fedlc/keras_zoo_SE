@@ -21,16 +21,16 @@ weights_file                 = 'weights.hdf5'  # Training weight file name
 train_model                  = False          # Train the model
 
 # Single model
-pred_model                   = False       # Predict using the model
+pred_model                   = True       # Predict using the model
 test_model                   = False       # Test the predictions of the model
 
 # SE model
-SE_pred_model                = True       # Predict using already saved models from Snapshot Ensemble
+SE_pred_model                = False       # Predict using already saved models from Snapshot Ensemble
 SE_test_model                = False      # Test using predictions from Snapshot Ensemble
 
 #dataset to use for prediction and test
-validation_set               = False
-test_set                     = True
+validation_set               = True
+test_set                     = False
 
 # number of prediction images to save
 nb_pred_images_to_save       = 20
@@ -133,7 +133,7 @@ norm_imageNet_preprocess           = False     # Normalize following imagenet pr
 norm_fit_dataset                   = False      # If True it recompute std and mean from images. Either it uses the std and mean set at the dataset config file
 norm_rescale                       = 1/255.    # Scalar to divide and set range 0-1
 norm_featurewise_center            = True      # Substract mean - dataset
-norm_featurewise_std_normalization = True      # Divide std - dataset
+norm_featurewise_std_normalization = False#True      # Divide std - dataset
 norm_samplewise_center             = False     # Substract mean - sample
 norm_samplewise_std_normalization  = False     # Divide std - sample
 norm_gcn                           = False     # Global contrast normalization
@@ -145,11 +145,11 @@ da_rotation_range                  = 0         # Rnd rotation degrees 0-180
 da_width_shift_range               = 0.0       # Rnd horizontal shift
 da_height_shift_range              = 0.0       # Rnd vertical shift
 da_shear_range                     = 0.0       # Shear in radians
-da_zoom_range                      = 0.0       # Zoom
+da_zoom_range                      = 0.0 ##0.5      # Zoom
 da_channel_shift_range             = 0.        # Channecf.l shifts
 da_fill_mode                       = 'constant'# Fill mode
 da_cval                            = 0.        # Void image value
-da_horizontal_flip                 = False      # Rnd horizontal flip
+da_horizontal_flip                 = False##True      # Rnd horizontal flip
 da_vertical_flip                   = False     # Rnd vertical flip
 da_spline_warp                     = False     # Enable elastic deformation
 da_warp_sigma                      = 10        # Elastic deformation sigma

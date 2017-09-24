@@ -165,46 +165,46 @@ class One_Net_Model(Model):
             #print(y_pred_dset.shape)
             #print(y_pred_dset.dtype)
 
+            if False:
+                ## ----- LOAD MODEL WEIGHTS -----
+                print('\nLoading model weights')
+                # Load best trained model (or last? see camvid.py)
+                weights_fl = os.path.join(self.cf.real_savepath, "weights.hdf5")
+                self.model.load_weights(weights_fl)
 
-            ## ----- LOAD MODEL WEIGHTS -----
-            print('\nLoading model weights')
-            # Load best trained model (or last? see camvid.py)
-            weights_fl = os.path.join(self.cf.real_savepath, "weights.hdf5")
-            self.model.load_weights(weights_fl)
+                ## ----- PREDICT -----
+                print('\nPredicting..')
+                checking_time = time.time()
+                y_pred = self.model.predict_generator(test_gen, val_samples=nb_sample,
+                                    max_q_size=10, nb_worker=1, pickle_safe=False)
+                                    #this combination works, not clear why
+                print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
-            ## ----- PREDICT -----
-            print('\nPredicting..')
-            checking_time = time.time()
-            y_pred = self.model.predict_generator(test_gen, val_samples=nb_sample,
-                                max_q_size=10, nb_worker=1, pickle_safe=False)
-                                #this combination works, not clear why
-            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
+                #print('\ny_pred right after prediction')
+                #print(type(y_pred))
+                #print(y_pred.shape)
+                #print(y_pred.dtype)
 
-            #print('\ny_pred right after prediction')
-            #print(type(y_pred))
-            #print(y_pred.shape)
-            #print(y_pred.dtype)
-
-            # Compute the y_pred argmax
-            if K.image_dim_ordering() == 'th':
-                y_pred = np.argmax(y_pred, axis=1)
-            else:
-                y_pred = np.argmax(y_pred, axis=3)
+                # Compute the y_pred argmax
+                if K.image_dim_ordering() == 'th':
+                    y_pred = np.argmax(y_pred, axis=1)
+                else:
+                    y_pred = np.argmax(y_pred, axis=3)
 
 
-            #print('\ny_pred after argmax')
-            #print(type(y_pred))
-            #print(y_pred.shape)
-            #print(y_pred.dtype)
+                #print('\ny_pred after argmax')
+                #print(type(y_pred))
+                #print(y_pred.shape)
+                #print(y_pred.dtype)
 
-            ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
-            print('\nSaving predictions in hdf5 file')
-            y_pred_dset[:] = y_pred[:]
+                ## ----- SAVE PREDICTIONS IN DATASET OF hdf5 FILE -----
+                print('\nSaving predictions in hdf5 file')
+                y_pred_dset[:] = y_pred[:]
 
-            #print('\ny_pred_dset after assignment of y_pred')
-            #print(type(y_pred_dset))
-            #print(y_pred_dset.shape)
-            #print(y_pred_dset.dtype)
+                #print('\ny_pred_dset after assignment of y_pred')
+                #print(type(y_pred_dset))
+                #print(y_pred_dset.shape)
+                #print(y_pred_dset.dtype)
 
 
             ## ----- LOAD x_true AND y_true IN BATCHES FROM enqueuer -----
@@ -267,6 +267,9 @@ class One_Net_Model(Model):
                 #print('\nx_true_batch')
                 #print(type(x_true_batch))
                 #print(x_true_batch.shape)
+                print(x_true_batch[0])
+                print(np.max(x_true_batch))
+                print(np.min(x_true_batch))
 
                 y_true_batch = data[1].astype('int32')
                 #print('\ny_true_batch before squeeze')
