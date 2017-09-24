@@ -16,8 +16,8 @@ cp -r keras_zoo_SE/ runs/$2_$3/
 sleep 2s
 cd runs/$2_$3/keras_zoo_SE/
 
-#CUDA_VISIBLE_DEVICES=$1 python train.py -c config/camvid.py -e $2 -s /home/flucchesi/experiments -l /home/flucchesi/experiments
-CUDA_VISIBLE_DEVICES=$1 python train.py -c config/cityscapes.py -e $2 -s /home/flucchesi/experiments -l /home/flucchesi/experiments
+CUDA_VISIBLE_DEVICES=$1 python train.py -c config/camvid.py -e $2 -s /home/flucchesi/experiments -l /home/flucchesi/experiments
+#CUDA_VISIBLE_DEVICES=$1 python train.py -c config/cityscapes.py -e $2 -s /home/flucchesi/experiments -l /home/flucchesi/experiments
 
 #CUDA_VISIBLE_DEVICES=$1 python train.py -c config/camvid.py -e $2 -s /datatmp/flucchesi/experiments -l /datatmp/flucchesi/experiments
 #CUDA_VISIBLE_DEVICES=$1 python train.py -c config/cityscapes.py -e $2 -s /datatmp/flucchesi/experiments -l /datatmp/flucchesi/experiments

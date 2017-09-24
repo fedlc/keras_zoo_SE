@@ -458,7 +458,7 @@ class One_Net_Model(Model):
             #print(y_pred.dtype)
             #print(y_pred)
             print('Averaging models predictions')
-            checking_time = time.time()
+            checking_time_aver = time.time()
             # model weights
             w = np.array(self.cf.SE_model_weights)
 
@@ -466,8 +466,18 @@ class One_Net_Model(Model):
             if (len(w)!=nb_models or not (np.sum(w)<1+eps and np.sum(w)>1-eps)):
                 raise Exception('Model weights are incorrect')
 
-            y_pred = np.average(y_pred, axis=0, weights=w)
-            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
+            for i in range(len(y_pred)):
+                checking_time = time.time()
+                y_pred[i] = y_pred[i]*w[i]
+                print ('  time moltiplication with w: ' + str(i) + ' ' + str( int(time.time()-checking_time)) + ' seconds')
+
+            checking_time = time.time()
+            y_pred = np.sum(y_pred, axis=0)
+            print ('  time sum: ' + str( int(time.time()-checking_time)) + ' seconds')
+            print ('  total time averaging: ' + str( int(time.time()-checking_time_aver)) + ' seconds')
+
+            #y_pred = np.average(y_pred, axis=0, weights=w)
+            #print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
             #print('\ny_pred after average')
             #print(type(y_pred))
