@@ -11,6 +11,8 @@ from keras import backend as K
 ##
 import h5py
 import gc ## garbage collector
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 
 # Keras dim orders
 def channel_idx():
@@ -333,7 +335,6 @@ class One_Net_Model(Model):
                 img_savepath = self.cf.savepath_pred_test_gen
             else:
                 raise ValueError('Unknown data generator tag')
-
 
 
             ## ----- SAVE PREDICTIONS AS IMAGES -----
@@ -662,6 +663,8 @@ class One_Net_Model(Model):
     def test(self, test_gen, tag='', tag_gen=''):
         if (self.cf.test_model or self.cf.SE_test_model):
             print('\n > ' + tag + '-testing the model with predictions from ' + tag_gen)
+            checking_time_test = time.time()
+
             test_gen.reset()
 
             ## get number of images in dataset TO DELETE?
@@ -670,7 +673,7 @@ class One_Net_Model(Model):
             ## ----- Load y_pred and y_true from the hdf5 file -----
 
             print('\nLoading data...')
-
+            checking_time = time.time()
             if tag=='test_SE':
                 y_file = h5py.File(self.cf.real_savepath + "/y_file_SE_" + tag_gen +".hdf5", 'r')
             else:
@@ -697,6 +700,7 @@ class One_Net_Model(Model):
             y_pred = np.array(y_pred_dset)
             y_true = np.array(y_true_dset)
 
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
             #print('\ny_pred')
             #print(type(y_pred))
@@ -709,22 +713,31 @@ class One_Net_Model(Model):
             #print(y_true.dtype)
 
             ## ----- COMPUTE ACCURACY -----
+            print('\nLoading classes')
+            checking_time = time.time()
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
 
-            #from sklearn.metrics import jaccard_similarity_score
-            #from sklearn.metrics import accuracy_score
-            from sklearn.metrics import confusion_matrix
-            from sklearn.metrics import classification_report
             #acc = accuracy_score(y_true.flatten(), y_pred.flatten(), normalize=True)
             #jac = jaccard_similarity_score(y_true.flatten(), y_pred.flatten(), normalize=True)
 
 
             classes_dict = self.cf.dataset.classes
+
+            print('\nComputing confusion matrix')
+
             confusion_matr = confusion_matrix(y_true.flatten(), y_pred.flatten())
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
+
             print(confusion_matr)
+
+            print('\nremoving void class')
+            checking_time = time.time()
+
 
             if 'void' in classes_dict.values():
                 keys_dict = {v: k for k, v in classes_dict.iteritems()}
                 key_void = keys_dict['void']
+                print(classes_dict)
 
                 confusion_matr = np.delete(confusion_matr, key_void, 0)
                 confusion_matr = np.delete(confusion_matr, key_void, 1)
@@ -732,11 +745,14 @@ class One_Net_Model(Model):
                 classes_dict = {x: classes_dict[x] for x in classes_dict if classes_dict[x] != 'void'}
 
             #report = classification_report(y_true.flatten(), y_pred.flatten(), [0,1,2,3,4,5,6,7,8,9,10], classes_dict.values())
-
-
             nb_classes = len(classes_dict)
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
+
+            print('\nComputing accuracy, Jaccard index, recall and precision')
+            checking_time = time.time()
 
             ## Compute true positive, true negative, etc
+
             TP = np.zeros((nb_classes), dtype='int')
             TN = np.zeros((nb_classes), dtype='int')
             FP = np.zeros((nb_classes), dtype='int')
@@ -781,6 +797,9 @@ class One_Net_Model(Model):
             jacc_mean = np.nanmean(jacc_percl)
             recall_mean = np.nanmean(recall_percl)
             precision_mean = np.nanmean(precision_percl)
+
+            print ('  time: ' + str( int(time.time()-checking_time)) + ' seconds')
+
 
             if tag=='test_SE':
                 file_results = '/SE_Model_results_' + tag_gen + '.txt'
@@ -828,6 +847,11 @@ class One_Net_Model(Model):
                 #f.write('\n\n\nClassification Report\n')
                 #f.write(report)
                 f.write('\n\nModels weights: {}\n'.format(w))
+
+        print('\n' + tag + '-test with predictions from ' + tag_gen + ' terminated')
+        print ('  time: ' + str( int(time.time()-checking_time_test)) + ' seconds')
+
+
 
     """
             OLD VERSION

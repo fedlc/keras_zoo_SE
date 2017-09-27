@@ -21,8 +21,8 @@ weights_file                 = 'weights.hdf5'  # Training weight file name
 train_model                  = False          # Train the model
 
 # Single model
-pred_model                   = True       # Predict using the model
-test_model                   = False       # Test the predictions of the model
+pred_model                   = False       # Predict using the model
+test_model                   = True       # Test the predictions of the model
 
 # SE model
 SE_pred_model                = False       # Predict using already saved models from Snapshot Ensemble
@@ -30,7 +30,7 @@ SE_test_model                = False      # Test using predictions from Snapshot
 
 #dataset to use for prediction and test
 validation_set               = True
-test_set                     = True
+test_set                     = False
 
 # number of prediction images to save
 nb_pred_images_to_save       = 20

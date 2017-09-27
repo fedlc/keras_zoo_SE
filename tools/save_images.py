@@ -124,7 +124,9 @@ def save_img3(image_batch, mask_batch, output, out_images_folder, epoch,
              color_map, classes, tag, void_label, n_legend_rows=1, tag2=''):
     # print('output shape: ' + str(output.shape))
     # print('Mask shape: ' + str(mask_batch.shape))
-    output[(mask_batch == void_label).nonzero()] = void_label
+
+    ##we assign the void label contained in the mask (y_true) also to the output (y_pred)
+    #output[(mask_batch == void_label).nonzero()] = void_label
     images = []
     for j in range(output.shape[0]):
         img = image_batch[j]

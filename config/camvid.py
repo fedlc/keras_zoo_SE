@@ -22,11 +22,11 @@ train_model                  = False          # Train the model
 
 # Single model
 pred_model                   = False       # Predict using the model
-test_model                   = False       # Test the predictions of the model
+test_model                   = True       # Test the predictions of the model
 
 # SE model
-SE_pred_model                = True       # Predict using already saved models from Snapshot Ensemble
-SE_test_model                = True      # Test using predictions from Snapshot Ensemble
+SE_pred_model                = False       # Predict using already saved models from Snapshot Ensemble
+SE_test_model                = False      # Test using predictions from Snapshot Ensemble
 
 #dataset to use for prediction and test
 validation_set               = True
