@@ -1,4 +1,4 @@
-# Snapshot Ensembling for semantic segmentation (integration in keras_zoo)
+# Snapshot Ensembling for semantic segmentation (integration in keras_zoo from github.com/david-vazquez/keras_zoo)
 # ----------------------------------------------------------------------
 
 # Keras implementation of Classification, Detection and Segmentation Networks
